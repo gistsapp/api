@@ -1,7 +1,15 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/gistapp/api/server"
+	"github.com/gistapp/api/utils"
+)
 
 func main() {
-	fmt.Println("Hello World")
+	port := utils.Get("PORT")
+	s := server.NewServer(fmt.Sprintf(":%s", port))
+	// Start the server
+	s.Start()
 }
