@@ -7,10 +7,7 @@
       {
         "dockerImage": "gists-api",
         "dockerProject": "milou666",
-        "dockerCacheFrom": "milou666/gists-api",
-        "dockerBuildFlags": {
-          "target": "release"
-        }
+        "dockerCacheFrom": "milou666/gists-api"
       }
     ]
   ]
