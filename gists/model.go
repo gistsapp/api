@@ -55,7 +55,7 @@ func (g *GistSQL) UpdateName(id string) error {
 }
 
 func (g *GistSQL) UpdateContent(id string) error {
-	_, err := storage.Database.Exec("UPDATE gists SET content = $1 WHERE id = $2", g.Content.String, id)
+	_, err := storage.Database.Exec("UPDATE gists SET content = $1 WHERE gist_id = $2", g.Content.String, id)
 	if err != nil {
 		log.Error(err)
 		return errors.New("couldn't update content")
@@ -64,7 +64,7 @@ func (g *GistSQL) UpdateContent(id string) error {
 }
 
 func (g *GistSQL) Delete(id string) error {
-	_, err := storage.Database.Exec("DELETE FROM gists WHERE id = $1", id)
+	_, err := storage.Database.Exec("DELETE FROM gists WHERE gist_id = $1", id)
 	if err != nil {
 		log.Error(err)
 		return errors.New("couldn't delete gist")
