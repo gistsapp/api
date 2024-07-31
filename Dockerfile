@@ -4,10 +4,13 @@ COPY . /app
 RUN go build -o main .
 
 FROM alpine:3.20
+ENV PORT=4000
 WORKDIR /app
 COPY --from=builder /app/main /app/main
 RUN chmod +x /app/main
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
+
+EXPOSE 4000
 
 CMD ["/app/main"]
