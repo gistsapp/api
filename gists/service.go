@@ -31,6 +31,13 @@ func (g *GistServiceImpl) Save(name string, content string) (*Gist, error) {
 }
 
 func (g *GistServiceImpl) UpdateName(id string, name string) error {
+
+	f := gistExists(id)
+
+	if f != nil {
+		return f
+	}
+
 	m := GistSQL{
 		ID: sql.NullInt32{
 			Valid: true,
@@ -53,6 +60,11 @@ func (g *GistServiceImpl) UpdateName(id string, name string) error {
 }
 
 func (g *GistServiceImpl) UpdateContent(id string, content string) error {
+	err := gistExists(id)
+
+	if err != nil {
+		return err
+	}
 	m := GistSQL{
 		ID: sql.NullInt32{
 			Valid: true,
@@ -67,7 +79,8 @@ func (g *GistServiceImpl) UpdateContent(id string, content string) error {
 			Valid:  true,
 		},
 	}
-	err := m.UpdateContent(id)
+
+	err = m.UpdateContent(id)
 	if err != nil {
 		return errors.New("couldn't update content in database gists")
 	}
@@ -75,6 +88,11 @@ func (g *GistServiceImpl) UpdateContent(id string, content string) error {
 }
 
 func (g *GistServiceImpl) Delete(id string) error {
+	err := gistExists(id)
+
+	if err != nil {
+		return err
+	}
 	m := GistSQL{
 		ID: sql.NullInt32{
 			Valid: true,
@@ -89,7 +107,7 @@ func (g *GistServiceImpl) Delete(id string) error {
 			Valid:  false,
 		},
 	}
-	err := m.Delete(id)
+	err = m.Delete(id)
 	if err != nil {
 		return errors.New("couldn't delete from database gists")
 	}
@@ -113,5 +131,22 @@ func (g *GistServiceImpl) FindByID(id string) (*Gist, error) {
 	}
 	return gist, nil
 }
+
+func gistExists(id string) error {
+	m := GistSQL{}
+
+	gists, err := m.FindByID(id)
+
+	if err != nil {
+		return ErrGistNotFound
+	}
+
+	if gists == nil {
+		return ErrGistNotFound
+	}
+	return nil
+}
+
+var ErrGistNotFound = errors.New("gist not found")
 
 var GistService GistServiceImpl = GistServiceImpl{}

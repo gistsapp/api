@@ -32,6 +32,9 @@ func (g *GistControllerImpl) UpdateName() fiber.Handler {
 			return c.Status(400).SendString("Request must be valid JSON with fields name and content as text")
 		}
 		if err := GistService.UpdateName(c.Params("id"), g.Name); err != nil {
+			if err == ErrGistNotFound {
+				return c.Status(404).SendString(err.Error())
+			}
 			return c.Status(400).SendString(err.Error()) //could be because gist not found
 		}
 		return c.Status(200).SendString("Gist updated successfully")
@@ -65,6 +68,9 @@ func (g *GistControllerImpl) UpdateContent() fiber.Handler {
 			return c.Status(400).SendString("Request must be valid JSON with fields name and content as text")
 		}
 		if err := GistService.UpdateContent(c.Params("id"), g.Content); err != nil {
+			if err == ErrGistNotFound {
+				return c.Status(404).SendString(err.Error())
+			}
 			return c.Status(400).SendString(err.Error()) //could be because gist not found
 		}
 		return c.Status(200).SendString("Gist updated successfully")
@@ -74,6 +80,9 @@ func (g *GistControllerImpl) UpdateContent() fiber.Handler {
 func (g *GistControllerImpl) Delete() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		if err := GistService.Delete(c.Params("id")); err != nil {
+			if err == ErrGistNotFound {
+				return c.Status(404).SendString(err.Error())
+			}
 			return c.Status(400).SendString(err.Error()) //could be because gist not found
 		}
 		return c.Status(200).SendString("Gist deleted successfully")
