@@ -8,4 +8,6 @@ type GistRouter struct {
 
 func (r *GistRouter) SubscribeRoutes(app *fiber.Router) {
 	(*app).Post("/gists", r.Controller.Save())
+	(*app).Patch("/gists/:id/name", r.Controller.UpdateName())
+	(*app).Get("/gists", r.Controller.FindAll())
 }

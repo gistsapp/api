@@ -18,7 +18,7 @@ type DatabaseV1 struct {
 
 type IDatabase interface {
 	Connect() (*sql.DB, error)
-	Select(query string, args ...any) (*sql.Rows, error)
+	Query(query string, args ...any) (*sql.Rows, error)
 	Exec(query string, args ...any) (sql.Result, error)
 }
 
@@ -37,7 +37,7 @@ func (db *DatabaseV1) Connect() (*sql.DB, error) {
 	return sql.Open("postgres", connStr)
 }
 
-func (db *DatabaseV1) Select(query string, args ...any) (*sql.Rows, error) {
+func (db *DatabaseV1) Query(query string, args ...any) (*sql.Rows, error) {
 	conn, err := db.Connect()
 	if err != nil {
 		log.Error(err)
