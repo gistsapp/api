@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS gists (
+  gist_id SERIAL PRIMARY KEY,
+  name VARCHAR(200) NOT NULL,
+  content TEXT NOT NULL
+);
