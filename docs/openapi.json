@@ -1,0 +1,223 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "gist.app API reference",
+    "description": "Share and publish your scripts and code snippets in one curl.",
+    "version": "1.0.0"
+  },
+  "tags": [],
+  "paths": {
+    "/gists": {
+      "post": {
+        "summary": "Create a gist",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string", "description": "name" },
+                  "content": { "type": "string" }
+                },
+                "required": ["name", "content"]
+              },
+              "example": {
+                "name": "temporibus sit amet",
+                "content": "Similique veniam illum laudantium sit. Officiis vitae esse accusantium. Deserunt hic distinctio dolores eos delectus enim reprehenderit sunt. Saepe doloremque iusto accusamus praesentium. Non deserunt aspernatur voluptate dolorem voluptas repellat quo nam modi. Nihil perferendis sapiente officiis quam voluptas ducimus tempora velit quaerat."
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Gist" }
+              }
+            }
+          }
+        },
+        "security": []
+      },
+      "get": {
+        "summary": "Get all gists",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Gist" }
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/gists/{id}/name": {
+      "patch": {
+        "summary": "Update gist's name",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "1",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string", "description": "name" }
+                },
+                "required": ["name"]
+              },
+              "example": { "name": "doloremque dolorum nobis" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/gists/{id}/content": {
+      "patch": {
+        "summary": "Update gist's content",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "1",
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string", "description": "name" }
+                },
+                "required": ["name"]
+              },
+              "example": { "content": "ezaeeza" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/gists/{id}": {
+      "get": {
+        "summary": "Get a gist",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "2",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Gist" }
+              }
+            }
+          }
+        },
+        "security": []
+      },
+      "delete": {
+        "summary": "Delete a gist",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "1",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "properties": {} }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Gist": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "description": "ID" },
+          "name": { "type": "string", "description": "name" },
+          "content": { "type": "string", "description": "content" }
+        },
+        "required": ["id", "name", "content"]
+      }
+    },
+    "securitySchemes": {}
+  },
+  "servers": []
+}
