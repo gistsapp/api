@@ -1,9 +1,9 @@
 package server
 
 import (
-	"log"
-
+	"github.com/MarceloPetrucio/go-scalar-api-reference"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/log"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 )
@@ -25,8 +25,22 @@ func NewServer(listenAddr string) *Server {
 }
 
 func (s *Server) Ignite(routers ...DomainRouter) {
+
 	s.app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Hello, World! Don't fool me twice!")
+		htmlContent, err := scalar.ApiReferenceHTML(&scalar.Options{
+			SpecURL: "./docs/openapi.json",
+			Theme:   scalar.ThemeKepler,
+			CustomOptions: scalar.CustomOptions{
+				PageTitle: "Gists App API Reference",
+			},
+			DarkMode: true,
+		})
+
+		if err != nil {
+			log.Error(err)
+			return c.Status(500).SendString("Error generating API reference")
+		}
+		return c.Format(htmlContent)
 	})
 
 	s.app.Use(cors.New(cors.Config{
