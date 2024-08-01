@@ -1,5 +1,26 @@
 # Gists.app API - Code snippets and scripts safe
 
+## Usage
+
+Check the [API documentation](http://localhost:4000) for more information (for now this page is hosted locally, so please run the project before accessing the documentation).
+
+## Quick Start
+
+### Pre-requisites
+
+- Go (version 1.22+)
+- Air
+- docker compose
+- migrate
+
+### Onboarding script
+
+```bash
+docker compose up -d
+migrate -path=migrations -database "postgresql://postgres:postgres@0.0.0.0:5432/gists?sslmode=disable" -verbose up
+air
+```
+
 ## Installation
 
 1. Make sure that you have `air`
