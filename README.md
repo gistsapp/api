@@ -1,5 +1,7 @@
 # Gists.app API - Code snippets and scripts safe
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/gistsapp/api)](https://goreportcard.com/report/github.com/kubernetes/kubernetes) ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/gistsapp/api?sort=semver)
+
 ## Usage
 
 Check the [API documentation](http://localhost:4000) for more information (for now this page is hosted locally, so please run the project before accessing the documentation).
