@@ -1,8 +1,8 @@
 name: Deploy
 on:
-  push:
-    tags:
-      - "*"
+  release:
+    types:
+      - published
 
 permissions:
   contents: read
@@ -10,13 +10,11 @@ permissions:
 jobs:
   get_tag:
     runs-on: ubuntu-latest
-    output:
-      tag: ${GITHUB_REF#refs/*/}
     steps:
       - uses: actions/checkout@v2
       - name: Set output
         id: vars
-        run: echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
+        run: echo "tag=$GITHUB_REF" | sed s/"refs\/tags\/v/"/g >> $GITHUB_OUTPUT
       - name: Check output
         env:
           RELEASE_VERSION: ${{ steps.vars.outputs.tag }}
