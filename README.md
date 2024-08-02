@@ -71,6 +71,15 @@ migrate create -ext=sql -dir=migrations -seq init
 
 To run the existing migrations locally :
 
+### With bash
+
 ```bash
 migrate -path=migrations -database "postgresql://postgres:postgres@0.0.0.0:5432/gists?sslmode=disable" -verbose up
+```
+
+### With go
+
+```bash
+go build main.go
+./main migrate
 ```

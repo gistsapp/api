@@ -2,6 +2,8 @@ package storage
 
 import (
 	"database/sql"
+	"os"
+	"path/filepath"
 
 	"github.com/gistapp/api/utils"
 	"github.com/gofiber/fiber/v2/log"
@@ -67,8 +69,14 @@ func (db *DatabaseV1) Exec(query string, args ...any) (sql.Result, error) {
 }
 
 func Migrate() error {
+	ex, err := os.Executable()
+	if err != nil {
+		panic(err)
+	}
+	exPath := filepath.Dir(ex)
+
 	m, err := migrate.New(
-		"file:///home/mihai/projects/gists/api/migrations",
+		"file://"+exPath+"/migrations",
 		"postgres://"+utils.Get("PG_USER")+":"+utils.Get("PG_PASSWORD")+"@"+utils.Get("PG_HOST")+":"+utils.Get("PG_PORT")+"/"+utils.Get("PG_DATABASE")+"?sslmode=disable",
 	)
 	if err != nil {
