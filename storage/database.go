@@ -5,6 +5,9 @@ import (
 
 	"github.com/gistapp/api/utils"
 	"github.com/gofiber/fiber/v2/log"
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/lib/pq"
 )
 
@@ -61,4 +64,16 @@ func (db *DatabaseV1) Exec(query string, args ...any) (sql.Result, error) {
 	defer conn.Close()
 
 	return conn.Exec(query, args...)
+}
+
+func Migrate() error {
+	m, err := migrate.New(
+		"file:///home/mihai/projects/gists/api/migrations",
+		"postgres://"+utils.Get("PG_USER")+":"+utils.Get("PG_PASSWORD")+"@"+utils.Get("PG_HOST")+":"+utils.Get("PG_PORT")+"/"+utils.Get("PG_DATABASE")+"?sslmode=disable",
+	)
+	if err != nil {
+		return err
+	}
+	m.Up()
+	return nil
 }
