@@ -1,10 +1,7 @@
 name: Deploy
 on:
   release:
-    types: [created]
-
-permissions:
-  contents: read
+    types: [published]
 
 jobs:
   get_tag:
