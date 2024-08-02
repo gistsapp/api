@@ -8,6 +8,7 @@ ENV PORT=4000
 WORKDIR /app
 COPY --from=builder /app/main /app/main
 COPY --from=builder /app/docs /app/docs
+COPY --from=builder /app/migrations /app/migrations
 RUN chmod +x /app/main
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
