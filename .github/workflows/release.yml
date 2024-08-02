@@ -42,7 +42,7 @@ jobs:
           VERSION_SPACES=$(npx semantic-release --dryRun | grep -oP 'Published release \K.*? ')
           VERSION="${VERSION_SPACES// /}"
           echo "The version is $VERSION"
-          echo "::set-output name=tag::$VERSION"
+          echo "tag=$VERSION" >> $GITHUB_OUTPUT
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
