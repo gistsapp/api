@@ -36,6 +36,8 @@ jobs:
         run: npm audit signatures
       - name: Compute release version
         id: get-tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION_SPACES=$(npx semantic-release --dryRun | grep -oP 'Published release \K.*? ')
           VERSION="${VERSION_SPACES// /}"
