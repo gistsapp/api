@@ -1,26 +1,23 @@
-CREATE TABLE IF NOT EXISTS auth_identity (
-  auth_id SERIAL PRIMARY KEY,
-  data JSONB NOT NULL
-);
-
 CREATE TABLE IF NOT EXISTS users (
   user_id SERIAL PRIMARY KEY,
   email VARCHAR(320) NOT NULL,
-  name VARCHAR(300) NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS users_auth (
-  user_id INT NOT NULL,
-  auth_id INT NOT NULL,
-  PRIMARY KEY (user_id, auth_id),
-  CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-  CONSTRAINT fk_auth_id FOREIGN KEY (auth_id) REFERENCES auth_identity(auth_id) ON DELETE CASCADE
+  name VARCHAR(300) NOT NULL,
+  picture TEXT
 );
 
 CREATE TABLE IF NOT EXISTS token (
   token_id SERIAL PRIMARY KEY,
   type VARCHAR(10) NOT NULL,
   value VARCHAR(200) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS auth_identity (
+  auth_id SERIAL PRIMARY KEY,
+  provider_id TEXT NOT NULL,
+  data JSONB NOT NULL,
+  type VARCHAR(10) NOT NULL,
+  owner_id INT NOT NULL,
+  CONSTRAINT fk_owner_id FOREIGN KEY (owner_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS users_token (
