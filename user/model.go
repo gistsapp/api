@@ -27,7 +27,7 @@ type UserModel interface {
 }
 
 func (u *UserSQL) Save() (*User, error) {
-	if u.Picture.Valid {
+	if !u.Picture.Valid {
 		u.Picture.String = "https://vercel.com/api/www/avatar/?u=" + u.Email.String + "&s=80"
 		u.Picture.Valid = true
 	}
@@ -36,6 +36,26 @@ func (u *UserSQL) Save() (*User, error) {
 		log.Error(err)
 		return nil, errors.New("couldn't create user")
 	}
+	var user User
+	row.Next()
+	err = row.Scan(&user.ID, &user.Email, &user.Name, &user.Picture)
+	if err != nil {
+		log.Error(err)
+		return nil, errors.New("couldn't find user")
+	}
+
+	return &user, nil
+}
+
+func (u *UserSQL) GetByEmail() (*User, error) {
+	query := "SELECT user_id, email, name, picture FROM users WHERE email = $1"
+	row, err := storage.Database.Query(query, u.Email.String)
+
+	if err != nil {
+		log.Error(err)
+		return nil, errors.New("couldn't find user")
+	}
+
 	var user User
 	row.Next()
 	err = row.Scan(&user.ID, &user.Email, &user.Name, &user.Picture)

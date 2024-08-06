@@ -25,6 +25,11 @@ type AuthIdentity struct {
 	ProviderID string `json:"provider_id"`
 }
 
+type JWTClaim struct {
+	Pub   string `json:"pub"`
+	Email string `json:"email"`
+}
+
 type AuthIdentityAndUser struct {
 	AuthIdentity AuthIdentity
 	User         user.User

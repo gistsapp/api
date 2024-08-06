@@ -12,5 +12,6 @@ services:
       - 5432:5432
     volumes:
       - gists-db-vol:/var/lib/postgresql/data
+
 volumes:
   gists-db-vol:
