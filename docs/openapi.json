@@ -1,10 +1,6 @@
 {
   "openapi": "3.0.1",
-  "info": {
-    "title": "gist.app API reference",
-    "description": "Share and publish your scripts and code snippets in one curl.",
-    "version": "1.0.0"
-  },
+  "info": { "title": "Gists", "description": "", "version": "1.0.0" },
   "tags": [],
   "paths": {
     "/gists": {
@@ -42,7 +38,7 @@
             }
           }
         },
-        "security": []
+        "security": [{ "bearer": [] }]
       },
       "get": {
         "summary": "Get all gists",
@@ -50,6 +46,13 @@
         "description": "",
         "tags": [],
         "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "type": "object", "properties": {} }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Success",
@@ -63,7 +66,7 @@
             }
           }
         },
-        "security": []
+        "security": [{ "bearer": [] }]
       }
     },
     "/gists/{id}/name": {
@@ -104,7 +107,7 @@
             }
           }
         },
-        "security": []
+        "security": [{ "bearer": [] }]
       }
     },
     "/gists/{id}/content": {
@@ -145,7 +148,7 @@
             }
           }
         },
-        "security": []
+        "security": [{ "bearer": [] }]
       }
     },
     "/gists/{id}": {
@@ -174,7 +177,7 @@
             }
           }
         },
-        "security": []
+        "security": [{ "bearer": [] }]
       },
       "delete": {
         "summary": "Delete a gist",
@@ -201,6 +204,112 @@
             }
           }
         },
+        "security": [{ "bearer": [] }]
+      }
+    },
+    "/auth/local/begin": {
+      "post": {
+        "summary": "Authenticate to the application wth a token",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "type": "object", "properties": {} },
+              "example": { "email": "radulescutristan@gmail.com" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "properties": {} }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/auth/local/verify": {
+      "post": {
+        "summary": "Confirm local authentication request",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string" },
+                  "token": { "type": "string" }
+                },
+                "required": ["email", "token"]
+              },
+              "example": {
+                "email": "radulescutristan@gmail.com",
+                "token": "163224"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "properties": {} }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/auth/google": {
+      "get": {
+        "summary": "Authenticate with google",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "properties": {} }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/auth/github": {
+      "get": {
+        "summary": "Authenticate with github",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "properties": {} }
+              }
+            }
+          }
+        },
         "security": []
       }
     }
@@ -217,7 +326,7 @@
         "required": ["id", "name", "content"]
       }
     },
-    "securitySchemes": {}
+    "securitySchemes": { "bearer": { "type": "http", "scheme": "bearer" } }
   },
   "servers": []
 }

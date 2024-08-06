@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/gistapp/api/auth"
 	"github.com/gistapp/api/gists"
 	"github.com/gistapp/api/server"
 	"github.com/gistapp/api/storage"
@@ -36,6 +37,12 @@ func main() {
 		Controller: gists.GistController,
 	}
 
+	authRouter := auth.AuthRouter{
+		Controller: auth.AuthController,
+	}
+
+	auth.AuthService.RegisterProviders() //register goth providers for authentication
+
 	// Start the server
-	s.Ignite(&gistRouter)
+	s.Ignite(&gistRouter, &authRouter)
 }

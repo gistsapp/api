@@ -12,11 +12,12 @@ type GistSaveValidator struct {
 func (g *GistControllerImpl) Save() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		g := new(GistSaveValidator)
+		owner_id := c.Locals("pub").(string)
 
 		if err := c.BodyParser(g); err != nil {
 			return c.Status(400).SendString("Request must be valid JSON with fields name and content as text")
 		}
-		gist, err := GistService.Save(g.Name, g.Content)
+		gist, err := GistService.Save(g.Name, g.Content, owner_id)
 		if err != nil {
 			return c.Status(500).SendString(err.Error())
 		}
@@ -31,7 +32,9 @@ func (g *GistControllerImpl) UpdateName() fiber.Handler {
 		if err := c.BodyParser(g); err != nil {
 			return c.Status(400).SendString("Request must be valid JSON with fields name and content as text")
 		}
-		if err := GistService.UpdateName(c.Params("id"), g.Name); err != nil {
+
+		owner_id := c.Locals("pub").(string)
+		if err := GistService.UpdateName(c.Params("id"), g.Name, owner_id); err != nil {
 			if err == ErrGistNotFound {
 				return c.Status(404).SendString(err.Error())
 			}
@@ -43,7 +46,8 @@ func (g *GistControllerImpl) UpdateName() fiber.Handler {
 
 func (g *GistControllerImpl) FindAll() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		gists, err := GistService.FindAll()
+		owner_id := c.Locals("pub").(string)
+		gists, err := GistService.FindAll(owner_id)
 		if err != nil {
 			return c.Status(500).SendString(err.Error())
 		}
@@ -53,7 +57,8 @@ func (g *GistControllerImpl) FindAll() fiber.Handler {
 
 func (g *GistControllerImpl) FindByID() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		gist, err := GistService.FindByID(c.Params("id"))
+		owner_id := c.Locals("pub").(string)
+		gist, err := GistService.FindByID(c.Params("id"), owner_id)
 		if err != nil {
 			return c.Status(404).SendString(err.Error())
 		}
@@ -67,7 +72,9 @@ func (g *GistControllerImpl) UpdateContent() fiber.Handler {
 		if err := c.BodyParser(g); err != nil {
 			return c.Status(400).SendString("Request must be valid JSON with fields name and content as text")
 		}
-		if err := GistService.UpdateContent(c.Params("id"), g.Content); err != nil {
+
+		owner_id := c.Locals("pub").(string)
+		if err := GistService.UpdateContent(c.Params("id"), g.Content, owner_id); err != nil {
 			if err == ErrGistNotFound {
 				return c.Status(404).SendString(err.Error())
 			}
@@ -79,7 +86,8 @@ func (g *GistControllerImpl) UpdateContent() fiber.Handler {
 
 func (g *GistControllerImpl) Delete() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		if err := GistService.Delete(c.Params("id")); err != nil {
+		owner_id := c.Locals("pub").(string)
+		if err := GistService.Delete(c.Params("id"), owner_id); err != nil {
 			if err == ErrGistNotFound {
 				return c.Status(404).SendString(err.Error())
 			}
