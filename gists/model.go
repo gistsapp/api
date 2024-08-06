@@ -13,12 +13,14 @@ type GistSQL struct {
 	ID      sql.NullInt32
 	Name    sql.NullString
 	Content sql.NullString
+	OwnerID sql.NullString
 }
 
 type Gist struct {
 	ID      string `json:"id"`
 	Name    string `json:"name"`
 	Content string `json:"content"`
+	OwnerID string `json:"owner_id"`
 }
 
 type GistModel interface {
@@ -26,7 +28,7 @@ type GistModel interface {
 }
 
 func (g *GistSQL) Save() (*Gist, error) {
-	row, err := storage.Database.Query("INSERT INTO gists(name, content) VALUES ($1, $2) RETURNING gist_id, name, content", g.Name.String, g.Content.String)
+	row, err := storage.Database.Query("INSERT INTO gists(name, content, owner) VALUES ($1, $2, $3) RETURNING gist_id, name, content, owner", g.Name.String, g.Content.String, g.OwnerID.String)
 
 	if err != nil {
 		log.Error(err)
@@ -36,7 +38,7 @@ func (g *GistSQL) Save() (*Gist, error) {
 	var gist Gist
 
 	row.Next()
-	err = row.Scan(&gist.ID, &gist.Name, &gist.Content)
+	err = row.Scan(&gist.ID, &gist.Name, &gist.Content, &gist.OwnerID)
 	if err != nil {
 		log.Error(err)
 		return nil, errors.New("couldn't find gist")
@@ -46,7 +48,7 @@ func (g *GistSQL) Save() (*Gist, error) {
 }
 
 func (g *GistSQL) UpdateName(id string) error {
-	_, err := storage.Database.Exec("UPDATE gists SET name = $1 WHERE gist_id = $2", g.Name.String, id)
+	_, err := storage.Database.Exec("UPDATE gists SET name = $1 WHERE gist_id = $2 AND owner = $3", g.Name.String, id, g.OwnerID.String)
 	if err != nil {
 		log.Error(err)
 		return errors.New("couldn't update name")
@@ -55,7 +57,7 @@ func (g *GistSQL) UpdateName(id string) error {
 }
 
 func (g *GistSQL) UpdateContent(id string) error {
-	_, err := storage.Database.Exec("UPDATE gists SET content = $1 WHERE gist_id = $2", g.Content.String, id)
+	_, err := storage.Database.Exec("UPDATE gists SET content = $1 WHERE gist_id = $2 AND owner = $3", g.Content.String, id, g.OwnerID.String)
 	if err != nil {
 		log.Error(err)
 		return errors.New("couldn't update content")
@@ -64,7 +66,7 @@ func (g *GistSQL) UpdateContent(id string) error {
 }
 
 func (g *GistSQL) Delete(id string) error {
-	_, err := storage.Database.Exec("DELETE FROM gists WHERE gist_id = $1", id)
+	_, err := storage.Database.Exec("DELETE FROM gists WHERE gist_id = $1 AND owner = $2", id, g.OwnerID.String)
 	if err != nil {
 		log.Error(err)
 		return errors.New("couldn't delete gist")
@@ -73,14 +75,14 @@ func (g *GistSQL) Delete(id string) error {
 }
 
 func (g *GistSQL) FindByID(id string) (*Gist, error) {
-	row, err := storage.Database.Query("SELECT gist_id, name, content FROM gists WHERE gist_id = $1", id)
+	row, err := storage.Database.Query("SELECT gist_id, name, content, owner FROM gists WHERE gist_id = $1 AND owner = $2", id, g.OwnerID.String)
 	if err != nil {
 		log.Error(err)
 		return nil, errors.New("couldn't find gist")
 	}
 	row.Next()
 	var gist Gist
-	err = row.Scan(&gist.ID, &gist.Name, &gist.Content)
+	err = row.Scan(&gist.ID, &gist.Name, &gist.Content, &gist.OwnerID)
 	if err != nil {
 		log.Error(err)
 		return nil, errors.New("couldn't find gist")
@@ -89,7 +91,7 @@ func (g *GistSQL) FindByID(id string) (*Gist, error) {
 }
 
 func (g *GistSQL) FindAll() ([]Gist, error) {
-	rows, err := storage.Database.Query("SELECT gist_id, name, content FROM gists")
+	rows, err := storage.Database.Query("SELECT gist_id, name, content, owner FROM gists WHERE owner = $1", g.OwnerID.String)
 	if err != nil {
 		log.Error(err)
 		return nil, errors.New("couldn't find gists")
@@ -97,7 +99,7 @@ func (g *GistSQL) FindAll() ([]Gist, error) {
 	var gists []Gist
 	for rows.Next() {
 		var gist GistSQL
-		err = rows.Scan(&gist.ID, &gist.Name, &gist.Content)
+		err = rows.Scan(&gist.ID, &gist.Name, &gist.Content, &gist.OwnerID)
 		if err != nil {
 			log.Error(err)
 			return nil, errors.New("couldn't find gists")
@@ -106,6 +108,7 @@ func (g *GistSQL) FindAll() ([]Gist, error) {
 			ID:      strconv.Itoa(int(gist.ID.Int32)),
 			Name:    gist.Name.String,
 			Content: gist.Content.String,
+			OwnerID: gist.OwnerID.String,
 		})
 	}
 	return gists, nil

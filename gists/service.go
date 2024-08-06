@@ -7,7 +7,7 @@ import (
 
 type GistServiceImpl struct{}
 
-func (g *GistServiceImpl) Save(name string, content string) (*Gist, error) {
+func (g *GistServiceImpl) Save(name string, content string, owner_id string) (*Gist, error) {
 	m := GistSQL{
 		ID: sql.NullInt32{
 			Valid: false,
@@ -21,6 +21,10 @@ func (g *GistServiceImpl) Save(name string, content string) (*Gist, error) {
 			String: content,
 			Valid:  true,
 		},
+		OwnerID: sql.NullString{
+			String: owner_id,
+			Valid:  true,
+		},
 	}
 
 	gist, err := m.Save()
@@ -30,9 +34,9 @@ func (g *GistServiceImpl) Save(name string, content string) (*Gist, error) {
 	return gist, nil
 }
 
-func (g *GistServiceImpl) UpdateName(id string, name string) error {
+func (g *GistServiceImpl) UpdateName(id string, name string, owner_id string) error {
 
-	f := gistExists(id)
+	f := gistExists(id, owner_id)
 
 	if f != nil {
 		return f
@@ -51,6 +55,11 @@ func (g *GistServiceImpl) UpdateName(id string, name string) error {
 			String: "",
 			Valid:  false,
 		},
+
+		OwnerID: sql.NullString{
+			String: owner_id,
+			Valid:  true,
+		},
 	}
 	err := m.UpdateName(id)
 	if err != nil {
@@ -59,8 +68,8 @@ func (g *GistServiceImpl) UpdateName(id string, name string) error {
 	return nil
 }
 
-func (g *GistServiceImpl) UpdateContent(id string, content string) error {
-	err := gistExists(id)
+func (g *GistServiceImpl) UpdateContent(id string, content string, owner_id string) error {
+	err := gistExists(id, owner_id)
 
 	if err != nil {
 		return err
@@ -78,6 +87,11 @@ func (g *GistServiceImpl) UpdateContent(id string, content string) error {
 			String: content,
 			Valid:  true,
 		},
+
+		OwnerID: sql.NullString{
+			String: owner_id,
+			Valid:  true,
+		},
 	}
 
 	err = m.UpdateContent(id)
@@ -87,8 +101,8 @@ func (g *GistServiceImpl) UpdateContent(id string, content string) error {
 	return nil
 }
 
-func (g *GistServiceImpl) Delete(id string) error {
-	err := gistExists(id)
+func (g *GistServiceImpl) Delete(id string, owner_id string) error {
+	err := gistExists(id, owner_id)
 
 	if err != nil {
 		return err
@@ -106,6 +120,11 @@ func (g *GistServiceImpl) Delete(id string) error {
 			String: "",
 			Valid:  false,
 		},
+
+		OwnerID: sql.NullString{
+			String: owner_id,
+			Valid:  true,
+		},
 	}
 	err = m.Delete(id)
 	if err != nil {
@@ -114,8 +133,14 @@ func (g *GistServiceImpl) Delete(id string) error {
 	return nil
 }
 
-func (g *GistServiceImpl) FindAll() ([]Gist, error) {
-	m := GistSQL{}
+func (g *GistServiceImpl) FindAll(owner_id string) ([]Gist, error) {
+	m := GistSQL{
+
+		OwnerID: sql.NullString{
+			String: owner_id,
+			Valid:  true,
+		},
+	}
 	gists, err := m.FindAll()
 	if err != nil {
 		return nil, errors.New("couldn't get gists")
@@ -123,8 +148,14 @@ func (g *GistServiceImpl) FindAll() ([]Gist, error) {
 	return gists, nil
 }
 
-func (g *GistServiceImpl) FindByID(id string) (*Gist, error) {
-	m := GistSQL{}
+func (g *GistServiceImpl) FindByID(id string, owner_id string) (*Gist, error) {
+	m := GistSQL{
+
+		OwnerID: sql.NullString{
+			String: owner_id,
+			Valid:  true,
+		},
+	}
 	gist, err := m.FindByID(id)
 	if err != nil {
 		return nil, errors.New("couldn't get gist")
@@ -132,8 +163,14 @@ func (g *GistServiceImpl) FindByID(id string) (*Gist, error) {
 	return gist, nil
 }
 
-func gistExists(id string) error {
-	m := GistSQL{}
+func gistExists(id string, owner_id string) error {
+	m := GistSQL{
+
+		OwnerID: sql.NullString{
+			String: owner_id,
+			Valid:  true,
+		},
+	}
 
 	gists, err := m.FindByID(id)
 

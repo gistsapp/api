@@ -1,16 +1,21 @@
 package gists
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"github.com/gistapp/api/server"
+	"github.com/gofiber/fiber/v2"
+)
 
 type GistRouter struct {
 	Controller GistControllerImpl
 }
 
 func (r *GistRouter) SubscribeRoutes(app *fiber.Router) {
-	(*app).Post("/gists", r.Controller.Save())
-	(*app).Patch("/gists/:id/name", r.Controller.UpdateName())
-	(*app).Patch("/gists/:id/content", r.Controller.UpdateContent())
-	(*app).Get("/gists", r.Controller.FindAll())
-	(*app).Get("/gists/:id", r.Controller.FindByID())
-	(*app).Delete("/gists/:id", r.Controller.Delete())
+	gists_router := (*app).Group("/gists", server.AuthNeededMiddleware)
+
+	gists_router.Post("/", r.Controller.Save())
+	gists_router.Patch("/:id/name", r.Controller.UpdateName())
+	gists_router.Patch("/:id/content", r.Controller.UpdateContent())
+	gists_router.Get("/", r.Controller.FindAll())
+	gists_router.Get("/:id", r.Controller.FindByID())
+	gists_router.Delete("/:id", r.Controller.Delete())
 }
