@@ -38,13 +38,5 @@ CREATE TABLE IF NOT EXISTS auth_identity (
   CONSTRAINT fk_owner_id FOREIGN KEY (owner_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS users_token (
-  user_id INT NOT NULL,
-  token_id INT NOT NULL,
-  PRIMARY KEY (user_id, token_id),
-  CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-  CONSTRAINT fk_token_id FOREIGN KEY (token_id) REFERENCES token(token_id) ON DELETE CASCADE
-);
-
 ALTER TABLE IF EXISTS gists ADD COLUMN owner INT NOT NULL;
 ALTER TABLE IF EXISTS gists ADD CONSTRAINT fk_owner FOREIGN KEY (owner) REFERENCES users(user_id) ON DELETE CASCADE;
