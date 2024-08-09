@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"github.com/gistapp/api/utils"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -17,7 +18,16 @@ type AuthLocalVerificationValidator struct {
 
 func (a *AuthControllerImpl) Callback() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		return AuthService.Callback(c)
+		token, err := AuthService.Callback(c)
+		if err != nil {
+			return c.Status(400).SendString(err.Error())
+		}
+		token_cookie := new(fiber.Cookie)
+		token_cookie.Name = "gists.access_token"
+		token_cookie.HTTPOnly = true
+		token_cookie.Value = token
+		c.Cookie(token_cookie)
+		return c.Redirect(utils.Get("FRONTEND_URL"))
 	}
 }
 
@@ -59,7 +69,12 @@ func (a *AuthControllerImpl) VerifyAuthToken() fiber.Handler {
 			return c.Status(400).SendString(err.Error())
 		}
 
-		return c.JSON(fiber.Map{"token": jwt_token})
+		token_cookie := new(fiber.Cookie)
+		token_cookie.Name = "gists.access_token"
+		token_cookie.HTTPOnly = true
+		token_cookie.Value = jwt_token
+		c.Cookie(token_cookie)
+		return c.Redirect(utils.Get("FRONTEND_URL"))
 	}
 }
 
