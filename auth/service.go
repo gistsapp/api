@@ -90,11 +90,11 @@ func (a *AuthServiceImpl) VerifyLocalAuthToken(token string, email string) (stri
 	return jwt_token, err
 }
 
-func (a *AuthServiceImpl) Callback(c *fiber.Ctx) error {
+func (a *AuthServiceImpl) Callback(c *fiber.Ctx) (string, error) {
 	auth_user, err := goth_fiber.CompleteUserAuth(c)
 	if err != nil {
 		log.Error(err)
-		return ErrCantCompleteAuth
+		return "", ErrCantCompleteAuth
 	}
 
 	user_md, _, err := a.GetUser(auth_user)
@@ -102,27 +102,23 @@ func (a *AuthServiceImpl) Callback(c *fiber.Ctx) error {
 	if err == nil {
 		token, err := utils.CreateToken(user_md.Email, user_md.ID)
 		if err != nil {
-			return err
+			return "", err
 		}
-		return c.JSON(fiber.Map{
-			"token": token,
-		})
+		return token, nil
 	}
 
 	user_md, err = a.Register(auth_user)
 
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	jwt, err := utils.CreateToken(user_md.Email, user_md.ID)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return c.JSON(fiber.Map{
-		"token": jwt,
-	})
+	return jwt, nil
 }
 
 func (a *AuthServiceImpl) GetUser(auth_user goth.User) (*user.User, *AuthIdentity, error) {
