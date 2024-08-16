@@ -11,7 +11,7 @@ import (
 
 type Server struct {
 	listenAddr string
-	app        *fiber.App
+	App        *fiber.App
 }
 
 type DomainRouter interface {
@@ -21,13 +21,13 @@ type DomainRouter interface {
 func NewServer(listenAddr string) *Server {
 	return &Server{
 		listenAddr: listenAddr,
-		app:        fiber.New(),
+		App:        fiber.New(),
 	}
 }
 
-func (s *Server) Ignite(routers ...DomainRouter) {
+func (s *Server) Setup(routers ...DomainRouter) {
 
-	s.app.Get("/", func(c *fiber.Ctx) error {
+	s.App.Get("/", func(c *fiber.Ctx) error {
 		htmlContent, err := scalar.ApiReferenceHTML(&scalar.Options{
 			SpecURL: "./docs/openapi.json",
 			Theme:   scalar.ThemeKepler,
@@ -44,18 +44,21 @@ func (s *Server) Ignite(routers ...DomainRouter) {
 		return c.Format(htmlContent)
 	})
 
-	s.app.Use(cors.New(cors.Config{
+	s.App.Use(cors.New(cors.Config{
 		AllowCredentials: true,
 		AllowOrigins:     utils.Get("FRONTEND_URL"),
 	}))
 
-	s.app.Use(logger.New())
+	s.App.Use(logger.New())
 
-	custom_router := s.app.Group("/")
+	custom_router := s.App.Group("/")
 
 	for _, router := range routers {
 		router.SubscribeRoutes(&custom_router)
 	}
 
-	log.Fatal(s.app.Listen(s.listenAddr))
+}
+
+func (s *Server) Ignite() {
+	log.Fatal(s.App.Listen(s.listenAddr))
 }

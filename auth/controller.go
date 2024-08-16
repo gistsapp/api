@@ -5,7 +5,16 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type AuthControllerImpl struct{}
+type IAuthController interface {
+	Callback() fiber.Handler
+	Authenticate() fiber.Handler
+	LocalAuth() fiber.Handler
+	VerifyAuthToken() fiber.Handler
+}
+
+type AuthControllerImpl struct{
+	AuthService IAuthService
+}
 
 type AuthLocalValidator struct {
 	Email string `json:"email"`
@@ -18,7 +27,7 @@ type AuthLocalVerificationValidator struct {
 
 func (a *AuthControllerImpl) Callback() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		token, err := AuthService.Callback(c)
+		token, err := a.AuthService.Callback(c)
 		if err != nil {
 			return c.Status(400).SendString(err.Error())
 		}
@@ -33,7 +42,7 @@ func (a *AuthControllerImpl) Callback() fiber.Handler {
 
 func (a *AuthControllerImpl) Authenticate() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		return AuthService.Authenticate(c)
+		return a.AuthService.Authenticate(c)
 	}
 }
 
@@ -44,7 +53,7 @@ func (a *AuthControllerImpl) LocalAuth() fiber.Handler {
 			return c.Status(400).SendString("Request must be valid JSON with field email as text")
 		}
 
-		if err := AuthService.LocalAuth(e.Email); err != nil {
+		if _, err := a.AuthService.LocalAuth(e.Email); err != nil {
 			return c.Status(400).SendString(err.Error())
 		}
 
@@ -63,7 +72,7 @@ func (a *AuthControllerImpl) VerifyAuthToken() fiber.Handler {
 		token := e.Token
 		email := e.Email
 
-		jwt_token, err := AuthService.VerifyLocalAuthToken(token, email)
+		jwt_token, err := a.AuthService.VerifyLocalAuthToken(token, email)
 
 		if err != nil {
 			return c.Status(400).SendString(err.Error())

@@ -16,6 +16,9 @@ ALTER TABLE gists ADD CONSTRAINT fk_org_id FOREIGN KEY (org_id) REFERENCES organ
 
 CREATE OR REPLACE FUNCTION assert_owner_is_member() RETURNS TRIGGER AS $$
 BEGIN
+    IF NEW.org_id IS NULL THEN
+        RETURN NEW;
+    END IF;
     IF (SELECT COUNT(*) FROM member WHERE org_id = NEW.org_id AND user_id = NEW.owner) = 0 THEN
         RAISE EXCEPTION 'Owner is not a member of the organization';
     END IF;

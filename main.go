@@ -13,7 +13,6 @@ import (
 )
 
 func main() {
-
 	if len(os.Args) > 1 {
 		args := os.Args[1]
 
@@ -38,11 +37,14 @@ func main() {
 	}
 
 	authRouter := auth.AuthRouter{
-		Controller: auth.AuthController,
+		Controller: &auth.AuthControllerImpl{
+			AuthService: &auth.AuthService,
+		},
 	}
 
 	auth.AuthService.RegisterProviders() //register goth providers for authentication
 
 	// Start the server
-	s.Ignite(&gistRouter, &authRouter)
+	s.Setup(&gistRouter, &authRouter)
+	s.Ignite()
 }

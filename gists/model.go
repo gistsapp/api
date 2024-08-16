@@ -14,6 +14,7 @@ type GistSQL struct {
 	Name    sql.NullString
 	Content sql.NullString
 	OwnerID sql.NullString
+	OrgID   sql.NullInt32
 }
 
 type Gist struct {
@@ -21,6 +22,7 @@ type Gist struct {
 	Name    string `json:"name"`
 	Content string `json:"content"`
 	OwnerID string `json:"owner_id"`
+	OrgID   string `json:"org_id,omitempty"`
 }
 
 type GistModel interface {
@@ -28,7 +30,14 @@ type GistModel interface {
 }
 
 func (g *GistSQL) Save() (*Gist, error) {
-	row, err := storage.Database.Query("INSERT INTO gists(name, content, owner) VALUES ($1, $2, $3) RETURNING gist_id, name, content, owner", g.Name.String, g.Content.String, g.OwnerID.String)
+	var row *sql.Rows
+	var err error
+
+	if g.OrgID.Valid {
+		row, err = storage.Database.Query("INSERT INTO gists(name, content, owner, org_id) VALUES ($1, $2, $3, $4) RETURNING gist_id, name, content, owner", g.Name.String, g.Content.String, g.OwnerID.String, g.OrgID.Int32)
+	}else {
+		row, err = storage.Database.Query("INSERT INTO gists(name, content, owner, org_id) VALUES ($1, $2, $3, $4) RETURNING gist_id, name, content, owner", g.Name.String, g.Content.String, g.OwnerID.String)
+	}
 
 	if err != nil {
 		log.Error(err)
@@ -38,13 +47,17 @@ func (g *GistSQL) Save() (*Gist, error) {
 	var gist Gist
 
 	row.Next()
-	err = row.Scan(&gist.ID, &gist.Name, &gist.Content, &gist.OwnerID)
+	if g.OrgID.Valid {
+		err = row.Scan(&gist.ID, &gist.Name, &gist.Content, &gist.OwnerID, &gist.OrgID)
+	}else {
+		err = row.Scan(&gist.ID, &gist.Name, &gist.Content, &gist.OwnerID)
+		gist.OrgID = ""
+	}
 	if err != nil {
 		log.Error(err)
 		return nil, errors.New("couldn't find gist")
 	}
 	return &gist, nil
-
 }
 
 func (g *GistSQL) UpdateName(id string) error {
@@ -75,14 +88,14 @@ func (g *GistSQL) Delete(id string) error {
 }
 
 func (g *GistSQL) FindByID(id string) (*Gist, error) {
-	row, err := storage.Database.Query("SELECT gist_id, name, content, owner FROM gists WHERE gist_id = $1 AND owner = $2", id, g.OwnerID.String)
+	row, err := storage.Database.Query("SELECT gist_id, name, content, owner, org_id FROM gists WHERE gist_id = $1 AND owner = $2", id, g.OwnerID.String)
 	if err != nil {
 		log.Error(err)
 		return nil, errors.New("couldn't find gist")
 	}
 	row.Next()
 	var gist Gist
-	err = row.Scan(&gist.ID, &gist.Name, &gist.Content, &gist.OwnerID)
+	err = row.Scan(&gist.ID, &gist.Name, &gist.Content, &gist.OwnerID, &gist.OrgID)
 	if err != nil {
 		log.Error(err)
 		return nil, errors.New("couldn't find gist")
@@ -91,7 +104,7 @@ func (g *GistSQL) FindByID(id string) (*Gist, error) {
 }
 
 func (g *GistSQL) FindAll() ([]Gist, error) {
-	rows, err := storage.Database.Query("SELECT gist_id, name, content, owner FROM gists WHERE owner = $1", g.OwnerID.String)
+	rows, err := storage.Database.Query("SELECT gist_id, name, content, owner, org_id FROM gists WHERE owner = $1", g.OwnerID.String)
 	if err != nil {
 		log.Error(err)
 		return nil, errors.New("couldn't find gists")
@@ -99,7 +112,7 @@ func (g *GistSQL) FindAll() ([]Gist, error) {
 	var gists []Gist
 	for rows.Next() {
 		var gist GistSQL
-		err = rows.Scan(&gist.ID, &gist.Name, &gist.Content, &gist.OwnerID)
+		err = rows.Scan(&gist.ID, &gist.Name, &gist.Content, &gist.OwnerID, &gist.OrgID)
 		if err != nil {
 			log.Error(err)
 			return nil, errors.New("couldn't find gists")
@@ -109,6 +122,7 @@ func (g *GistSQL) FindAll() ([]Gist, error) {
 			Name:    gist.Name.String,
 			Content: gist.Content.String,
 			OwnerID: gist.OwnerID.String,
+			OrgID:  strconv.Itoa(int(gist.OrgID.Int32)),
 		})
 	}
 	return gists, nil
