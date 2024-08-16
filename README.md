@@ -36,13 +36,22 @@ go install github.com/air-verse/air@latest
 
 ```bash
 # for now none needed
-
 PORT="4000"
 PG_USER="postgres"
 PG_PASSWORD="postgres"
 PG_PORT="5432"
 PG_HOST="0.0.0.0"
 PG_DATABASE="gists"
+PUBLIC_URL="http://localhost:4000"
+FRONTEND_URL="http://localhost:3000"
+GOOGLE_KEY="<REDACTED>"
+GOOGLE_SECRET="<REDACTED>"
+GITHUB_KEY="<REDACTED>"
+GITHUB_SECRET="<REDACTED>"
+MAIL_SMTP="<REDACTED>"
+MAIL_PASSWORD="<REDACTED>"
+SMTP_PORT="<REDACTED>"
+SMTP_HOST="<REDACTED>"
 ```
 
 4. Run the server
@@ -50,6 +59,22 @@ PG_DATABASE="gists"
 ```bash
 air
 ```
+
+## Configuration
+
+All the configuration is done through env variables : 
+- `PORT` : the port on which your web server runs
+- `PG_USER` : the postgres user
+- `PG_PASSWORD` : the postgres password
+- `PG_PORT` : the postgres port
+- `PG_HOST` : the postgres host
+- `PG_DATABASE` : the postgres database
+- `PUBLIC_URL` : The URL on which your application is available. If you use a reverse proxy to make your app available, you need to provide its URL thanks to this variable. It is mainly use as the redirection URL used during the authentication flow.
+- `FRONTEND_URL` : The URL on which your frontend is available. It is mainly use to set the cookie after the authentication flow
+- `GOOGLE_KEY` : your google client key for OAUTH2
+- `GOOGLE_SECRET` : your google client secret for OAUTH2
+- `GITHUB_KEY` : your github client key for OAUTH2
+- `GITHUB_SECRET` : your github client secret for OAUTH2
 
 ## Tests
 
