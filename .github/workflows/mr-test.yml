@@ -22,24 +22,6 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
-    env:
-      PORT:"4000"
-      PG_USER:"postgres"
-      PG_PASSWORD:"postgres"
-      PG_PORT:"5432"
-      PG_HOST:"0.0.0.0"
-      PG_DATABASE:"gists"
-      GOOGLE_KEY:""
-      GOOGLE_SECRET:""
-      GITHUB_KEY:""
-      GITHUB_SECRET:""
-      PUBLIC_URL:"http://localhost:4000"
-      APP_KEY:"DUMP_APP_KEY_FOR_TEST"
-      SMTP_HOST:""
-      MAIL_SMTP:""
-      MAIL_PASSWORD:""
-      SMTP_PORT:""
-      FRONTEND_URL:"http://localhost:3000"
     steps:
       - uses: actions/checkout@v4
       - name: Install Go toolchain
@@ -47,6 +29,6 @@ jobs:
         with:
           go-version: 1.23.0
       - name: Run migrations
-        run: go build -o main && chmod +x ./main && ./main migrate
+        run: go build -o main && chmod +x ./main && PORT="4000" PG_USER="postgres" PG_PASSWORD="postgres" PG_PORT="5432" PG_HOST="0.0.0.0" PG_DATABASE="gists" GOOGLE_KEY="" GOOGLE_SECRET="" GITHUB_KEY="" GITHUB_SECRET="" PUBLIC_URL="http://localhost:4000" APP_KEY="DUMP_APP_KEY_FOR_TEST" SMTP_HOST="" MAIL_SMTP="" MAIL_PASSWORD="" SMTP_PORT="" FRONTEND_URL="http://localhost:3000" ./main migrate
       - name: Run tests
-        run: go test ./tests/
+        run: PORT="4000" PG_USER="postgres" PG_PASSWORD="postgres" PG_PORT="5432" PG_HOST="0.0.0.0" PG_DATABASE="gists" GOOGLE_KEY="" GOOGLE_SECRET="" GITHUB_KEY="" GITHUB_SECRET="" PUBLIC_URL="http://localhost:4000" APP_KEY="DUMP_APP_KEY_FOR_TEST" SMTP_HOST="" MAIL_SMTP="" MAIL_PASSWORD="" SMTP_PORT="" FRONTEND_URL="http://localhost:3000" go test ./tests/
