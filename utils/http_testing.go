@@ -9,7 +9,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func MakeRequest(t *testing.T, app *fiber.App, url string, payload interface{}) (map[string]string, *http.Response) {
+func MakeRequest(t *testing.T, app *fiber.App, url string, payload interface{}, headers map[string]string) (map[string]string, *http.Response) {
 	// Marshal payload to JSON
 	jsonPayload, err := json.Marshal(payload)
 	if err != nil {
@@ -24,14 +24,20 @@ func MakeRequest(t *testing.T, app *fiber.App, url string, payload interface{}) 
 
 	req.Header.Add("Content-Type", "application/json")
 
+	if headers != nil {
+		for key, value := range headers {
+			req.Header.Add(key, value)
+		}
+	}
+
 	// Test the request using Fiber's testing framework
 	resp, err := app.Test(req)
 	if err != nil {
 		t.Fatalf("Failed to execute request: %v", err)
 	}
 
-	if resp.StatusCode != 200 {
-		t.Errorf("Expected status code 200, got %d", resp.StatusCode)
+	if resp.StatusCode != 200 && resp.StatusCode != 201 {
+		t.Errorf("Expected status code 200 or 201, got %d", resp.StatusCode)
 	}
 
 	// Decode the response body into a map

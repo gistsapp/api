@@ -3,6 +3,8 @@ package organizations
 import (
 	"database/sql"
 	"errors"
+
+	"github.com/gofiber/fiber/v2/log"
 )
 
 type OrganizationServiceImpl struct{}
@@ -18,6 +20,8 @@ func (g *OrganizationServiceImpl) Save(name string, owner_id string) (*Organizat
 			Valid:  true,
 		},
 	}
+
+	log.Info("saving organization")
 
 	organization, err := m.Save(owner_id)
 	if err != nil {

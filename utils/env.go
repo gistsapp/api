@@ -20,7 +20,6 @@ func Get(key string) string {
 	if !ok {
 		msg := fmt.Sprintf("Env variable '%q' not found\n", key)
 		panic(msg)
-		return ""
 	}
 
 	return value
