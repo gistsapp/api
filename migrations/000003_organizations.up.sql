@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS member (
     member_id SERIAL PRIMARY KEY,
     org_id INT NOT NULL,
     user_id INT NOT NULL,
+    role TEXT NOT NULL,
     CONSTRAINT fk_org_id FOREIGN KEY (org_id) REFERENCES organization(org_id) ON DELETE CASCADE,
     CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );

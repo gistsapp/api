@@ -29,7 +29,7 @@ type OrganizationModel interface {
 }
 
 func (o *OrganizationSQL) Save(owner_id string) (*Organization, error) {
-	row, err := storage.Database.Query("INSERT INTO organizations(name) VALUES ($1) RETURNING org_id, name", o.Name.String)
+	row, err := storage.Database.Query("INSERT INTO organization(name) VALUES ($1) RETURNING org_id, name", o.Name.String)
 
 	if err != nil {
 		log.Error(err)
@@ -55,7 +55,7 @@ func (o *OrganizationSQL) Save(owner_id string) (*Organization, error) {
 }
 
 func (o *OrganizationSQL) Delete() error {
-	_, err := storage.Database.Exec("DELETE FROM organizations WHERE org_id = $1", o.ID.Int32)
+	_, err := storage.Database.Exec("DELETE FROM organization WHERE org_id = $1", o.ID.Int32)
 	if err != nil {
 		log.Error(err)
 		return errors.New("couldn't delete organization")
