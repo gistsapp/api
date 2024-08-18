@@ -6,6 +6,7 @@ import (
 
 	"github.com/gistapp/api/auth"
 	"github.com/gistapp/api/gists"
+	"github.com/gistapp/api/organizations"
 	"github.com/gistapp/api/server"
 	"github.com/gistapp/api/storage"
 	"github.com/gistapp/api/utils"
@@ -13,7 +14,6 @@ import (
 )
 
 func main() {
-
 	if len(os.Args) > 1 {
 		args := os.Args[1]
 
@@ -38,11 +38,18 @@ func main() {
 	}
 
 	authRouter := auth.AuthRouter{
-		Controller: auth.AuthController,
+		Controller: &auth.AuthControllerImpl{
+			AuthService: &auth.AuthService,
+		},
+	}
+
+	orgRouter := organizations.OrganizationRouter{
+		Controller: organizations.OrganizationControllerImpl{},
 	}
 
 	auth.AuthService.RegisterProviders() //register goth providers for authentication
 
 	// Start the server
-	s.Ignite(&gistRouter, &authRouter)
+	s.Setup(&gistRouter, &authRouter, &orgRouter)
+	s.Ignite()
 }

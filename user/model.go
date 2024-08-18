@@ -66,3 +66,12 @@ func (u *UserSQL) GetByEmail() (*User, error) {
 
 	return &user, nil
 }
+
+func (u *UserSQL) Delete() error {
+	_, err := storage.Database.Exec("DELETE FROM users WHERE user_id = $1", u.ID.String)
+	if err != nil {
+		log.Error(err)
+		return errors.New("couldn't delete user")
+	}
+	return nil
+}

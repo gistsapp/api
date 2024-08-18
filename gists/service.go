@@ -3,28 +3,61 @@ package gists
 import (
 	"database/sql"
 	"errors"
+	"strconv"
 )
 
 type GistServiceImpl struct{}
 
-func (g *GistServiceImpl) Save(name string, content string, owner_id string) (*Gist, error) {
-	m := GistSQL{
-		ID: sql.NullInt32{
-			Valid: false,
-			Int32: 0,
-		},
-		Name: sql.NullString{
-			String: name,
-			Valid:  true,
-		},
-		Content: sql.NullString{
-			String: content,
-			Valid:  true,
-		},
-		OwnerID: sql.NullString{
-			String: owner_id,
-			Valid:  true,
-		},
+func (g *GistServiceImpl) Save(name string, content string, owner_id string, org_id string) (*Gist, error) {
+	var m GistSQL
+
+	if org_id != "" {
+		org_id_int, err := strconv.Atoi(org_id)
+
+		if err != nil {
+			return nil, errors.New("org_id must be an integer")
+		}
+		m = GistSQL{
+			ID: sql.NullInt32{
+				Valid: false,
+				Int32: 0,
+			},
+			Name: sql.NullString{
+				String: name,
+				Valid:  true,
+			},
+			Content: sql.NullString{
+				String: content,
+				Valid:  true,
+			},
+			OwnerID: sql.NullString{
+				String: owner_id,
+				Valid:  true,
+			},
+			OrgID: sql.NullInt32{
+				Int32: int32(org_id_int),
+				Valid: true,
+			},
+		}
+	} else {
+		m = GistSQL{
+			ID: sql.NullInt32{
+				Valid: false,
+				Int32: 0,
+			},
+			Name: sql.NullString{
+				String: name,
+				Valid:  true,
+			},
+			Content: sql.NullString{
+				String: content,
+				Valid:  true,
+			},
+			OwnerID: sql.NullString{
+				String: owner_id,
+				Valid:  true,
+			},
+		}
 	}
 
 	gist, err := m.Save()

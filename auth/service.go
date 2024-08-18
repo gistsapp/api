@@ -16,6 +16,17 @@ import (
 	"github.com/shareed2k/goth_fiber"
 )
 
+type IAuthService interface {
+	Authenticate(c *fiber.Ctx) error
+	LocalAuth(email string) (TokenSQL, error)
+	VerifyLocalAuthToken(token string, email string) (string, error)
+	Callback(c *fiber.Ctx) (string, error)
+	GetUser(auth_user goth.User) (*user.User, *AuthIdentity, error)
+	Register(auth_user goth.User) (*user.User, error)
+	RegisterProviders()
+	IsAuthenticated(token string) (*JWTClaim, error)
+}
+
 type AuthServiceImpl struct{}
 
 func (a *AuthServiceImpl) Authenticate(c *fiber.Ctx) error {
@@ -28,7 +39,7 @@ func (a *AuthServiceImpl) Authenticate(c *fiber.Ctx) error {
 }
 
 // generates a token and sends it to the user by email
-func (a *AuthServiceImpl) LocalAuth(email string) error {
+func (a *AuthServiceImpl) LocalAuth(email string) (TokenSQL, error) {
 	token_val := utils.GenToken(6)
 	token_model := TokenSQL{
 		Keyword: sql.NullString{String: email, Valid: true},
@@ -39,12 +50,12 @@ func (a *AuthServiceImpl) LocalAuth(email string) error {
 	_, err := token_model.Save()
 
 	if err != nil {
-		return err
+		return token_model, err
 	}
 
 	err = utils.SendEmail("Gistapp: Local Auth", "Your token is: "+token_val, email)
 
-	return err
+	return token_model, err
 }
 
 // verifies the token and finishes the registration
