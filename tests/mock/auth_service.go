@@ -13,7 +13,8 @@ import (
 	"github.com/markbates/goth"
 )
 
-type MockAuthService struct{}
+type MockAuthService struct {
+}
 
 func (m *MockAuthService) Authenticate(c *fiber.Ctx) error {
 	return nil
@@ -79,13 +80,8 @@ func (m *MockAuthService) Callback(c *fiber.Ctx) (string, error) {
 	return "", nil
 }
 
-func (m *MockAuthService) GetUser(goth_user goth.User) (*user.User, *auth.AuthIdentity, error) {
-	auth_and_user, err := new(auth.AuthIdentitySQL).GetWithUser(goth_user.UserID)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return &auth_and_user.User, &auth_and_user.AuthIdentity, nil
+func (a *MockAuthService) GetUser(auth_user goth.User) (*user.User, *auth.AuthIdentity, error) {
+	return auth.AuthService.GetUser(auth_user)
 }
 
 func (m *MockAuthService) Register(auth_user goth.User) (*user.User, error) {

@@ -36,6 +36,7 @@ func InitServerGists() *fiber.App {
 
 	auth_router := auth.AuthRouter{
 		Controller: &mock.MockAuthController{
+			//needs GetUser to fit the auth interface
 			AuthService: &mock.MockAuthService{},
 		},
 	}
