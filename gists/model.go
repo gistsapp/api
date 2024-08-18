@@ -34,9 +34,9 @@ func (g *GistSQL) Save() (*Gist, error) {
 	var err error
 
 	if g.OrgID.Valid {
-		row, err = storage.Database.Query("INSERT INTO gists(name, content, owner, org_id) VALUES ($1, $2, $3, $4) RETURNING gist_id, name, content, owner", g.Name.String, g.Content.String, g.OwnerID.String, g.OrgID.Int32)
-	}else {
-		row, err = storage.Database.Query("INSERT INTO gists(name, content, owner, org_id) VALUES ($1, $2, $3, $4) RETURNING gist_id, name, content, owner", g.Name.String, g.Content.String, g.OwnerID.String)
+		row, err = storage.Database.Query("INSERT INTO gists(name, content, owner, org_id) VALUES ($1, $2, $3, $4) RETURNING gist_id, name, content, owner, org_id", g.Name.String, g.Content.String, g.OwnerID.String, g.OrgID.Int32)
+	} else {
+		row, err = storage.Database.Query("INSERT INTO gists(name, content, owner) VALUES ($1, $2, $3) RETURNING gist_id, name, content, owner", g.Name.String, g.Content.String, g.OwnerID.String)
 	}
 
 	if err != nil {
@@ -49,7 +49,7 @@ func (g *GistSQL) Save() (*Gist, error) {
 	row.Next()
 	if g.OrgID.Valid {
 		err = row.Scan(&gist.ID, &gist.Name, &gist.Content, &gist.OwnerID, &gist.OrgID)
-	}else {
+	} else {
 		err = row.Scan(&gist.ID, &gist.Name, &gist.Content, &gist.OwnerID)
 		gist.OrgID = ""
 	}
@@ -122,7 +122,7 @@ func (g *GistSQL) FindAll() ([]Gist, error) {
 			Name:    gist.Name.String,
 			Content: gist.Content.String,
 			OwnerID: gist.OwnerID.String,
-			OrgID:  strconv.Itoa(int(gist.OrgID.Int32)),
+			OrgID:   strconv.Itoa(int(gist.OrgID.Int32)),
 		})
 	}
 	return gists, nil
