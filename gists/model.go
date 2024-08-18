@@ -18,11 +18,11 @@ type GistSQL struct {
 }
 
 type Gist struct {
-	ID      string `json:"id"`
-	Name    string `json:"name"`
-	Content string `json:"content"`
-	OwnerID string `json:"owner_id"`
-	OrgID   string `json:"org_id,omitempty"`
+	ID      string  `json:"id"`
+	Name    string  `json:"name"`
+	Content string  `json:"content"`
+	OwnerID string  `json:"owner_id"`
+	OrgID   *string `json:"org_id,omitempty"`
 }
 
 type GistModel interface {
@@ -51,7 +51,7 @@ func (g *GistSQL) Save() (*Gist, error) {
 		err = row.Scan(&gist.ID, &gist.Name, &gist.Content, &gist.OwnerID, &gist.OrgID)
 	} else {
 		err = row.Scan(&gist.ID, &gist.Name, &gist.Content, &gist.OwnerID)
-		gist.OrgID = ""
+		gist.OrgID = nil
 	}
 	if err != nil {
 		log.Error(err)
@@ -122,7 +122,13 @@ func (g *GistSQL) FindAll() ([]Gist, error) {
 			Name:    gist.Name.String,
 			Content: gist.Content.String,
 			OwnerID: gist.OwnerID.String,
-			OrgID:   strconv.Itoa(int(gist.OrgID.Int32)),
+			OrgID: func() *string {
+				if gist.OrgID.Valid {
+					orgID := strconv.Itoa(int(gist.OrgID.Int32))
+					return &orgID
+				}
+				return nil
+			}(),
 		})
 	}
 	return gists, nil

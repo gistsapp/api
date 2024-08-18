@@ -52,6 +52,7 @@ func (g *GistControllerImpl) FindAll() fiber.Handler {
 		if err != nil {
 			return c.Status(500).SendString(err.Error())
 		}
+
 		return c.JSON(gists)
 	}
 }
