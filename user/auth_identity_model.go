@@ -1,11 +1,10 @@
-package auth
+package user
 
 import (
 	"database/sql"
 	"errors"
 
 	"github.com/gistapp/api/storage"
-	"github.com/gistapp/api/user"
 	"github.com/gofiber/fiber/v2/log"
 )
 
@@ -32,7 +31,7 @@ type JWTClaim struct {
 
 type AuthIdentityAndUser struct {
 	AuthIdentity AuthIdentity
-	User         user.User
+	User         User
 }
 
 type AuthIdentityModel interface {

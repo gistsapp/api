@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"testing"
 
-	"github.com/gistapp/api/auth"
 	"github.com/gistapp/api/user"
 	"github.com/gistapp/api/utils"
 	"github.com/gofiber/fiber/v2"
@@ -30,7 +29,7 @@ func GetAuthToken(t *testing.T, app *fiber.App) string {
 }
 
 func DeleteAuthUser(t *testing.T, auth_token string) {
-	claims, _ := auth.AuthService.IsAuthenticated(auth_token)
+	claims, _ := user.AuthService.IsAuthenticated(auth_token)
 
 	user := user.UserSQL{
 		ID: sql.NullString{

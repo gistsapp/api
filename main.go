@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/gistapp/api/auth"
 	"github.com/gistapp/api/gists"
 	"github.com/gistapp/api/organizations"
 	"github.com/gistapp/api/server"
 	"github.com/gistapp/api/storage"
+	"github.com/gistapp/api/user"
 	"github.com/gistapp/api/utils"
 	"github.com/gofiber/fiber/v2/log"
 )
@@ -37,9 +37,9 @@ func main() {
 		Controller: gists.GistController,
 	}
 
-	authRouter := auth.AuthRouter{
-		Controller: &auth.AuthControllerImpl{
-			AuthService: &auth.AuthService,
+	authRouter := user.AuthRouter{
+		Controller: &user.AuthControllerImpl{
+			AuthService: &user.AuthService,
 		},
 	}
 
@@ -47,7 +47,7 @@ func main() {
 		Controller: organizations.OrganizationControllerImpl{},
 	}
 
-	auth.AuthService.RegisterProviders() //register goth providers for authentication
+	user.AuthService.RegisterProviders() //register goth providers for authentication
 
 	// Start the server
 	s.Setup(&gistRouter, &authRouter, &orgRouter)

@@ -7,12 +7,12 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/gistapp/api/auth"
 	"github.com/gistapp/api/gists"
 	"github.com/gistapp/api/organizations"
 	"github.com/gistapp/api/server"
 	"github.com/gistapp/api/storage"
 	"github.com/gistapp/api/tests/mock"
+	"github.com/gistapp/api/user"
 	"github.com/gistapp/api/utils"
 	"github.com/gofiber/fiber/v2"
 )
@@ -37,7 +37,7 @@ func InitServerOrgs() *fiber.App {
 		Controller: gists.GistController,
 	}
 
-	auth_router := auth.AuthRouter{
+	auth_router := user.AuthRouter{
 		Controller: &mock.MockAuthController{
 			AuthService: &mock.MockAuthService{},
 		},

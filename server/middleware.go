@@ -1,7 +1,7 @@
 package server
 
 import (
-	"github.com/gistapp/api/auth"
+	"github.com/gistapp/api/user"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -21,7 +21,7 @@ func AuthNeededMiddleware(ctx *fiber.Ctx) error {
 		})
 	}
 	raw_token := string(ctx.Request().Header.Peek("Authorization")[7:])
-	claims, err := auth.AuthService.IsAuthenticated(raw_token)
+	claims, err := user.AuthService.IsAuthenticated(raw_token)
 	if err != nil {
 		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": "Unauthorized",

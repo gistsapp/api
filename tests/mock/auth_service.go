@@ -6,7 +6,6 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/gistapp/api/auth"
 	"github.com/gistapp/api/user"
 	"github.com/gistapp/api/utils"
 	"github.com/gofiber/fiber/v2"

@@ -1,4 +1,4 @@
-package auth
+package user
 
 import (
 	"database/sql"
@@ -6,7 +6,6 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/gistapp/api/user"
 	"github.com/gistapp/api/utils"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
@@ -21,8 +20,8 @@ type IAuthService interface {
 	LocalAuth(email string) (TokenSQL, error)
 	VerifyLocalAuthToken(token string, email string) (string, error)
 	Callback(c *fiber.Ctx) (string, error)
-	GetUser(auth_user goth.User) (*user.User, *AuthIdentity, error)
-	Register(auth_user goth.User) (*user.User, error)
+	GetUser(auth_user goth.User) (*User, *AuthIdentity, error)
+	Register(auth_user goth.User) (*User, error)
 	RegisterProviders()
 	IsAuthenticated(token string) (*JWTClaim, error)
 }
@@ -132,7 +131,7 @@ func (a *AuthServiceImpl) Callback(c *fiber.Ctx) (string, error) {
 	return jwt, nil
 }
 
-func (a *AuthServiceImpl) GetUser(auth_user goth.User) (*user.User, *AuthIdentity, error) {
+func (a *AuthServiceImpl) GetUser(auth_user goth.User) (*User, *AuthIdentity, error) {
 	auth_and_user, err := new(AuthIdentitySQL).GetWithUser(auth_user.UserID)
 	if err != nil {
 		return nil, nil, err
@@ -141,13 +140,13 @@ func (a *AuthServiceImpl) GetUser(auth_user goth.User) (*user.User, *AuthIdentit
 	return &auth_and_user.User, &auth_and_user.AuthIdentity, nil
 }
 
-func (a *AuthServiceImpl) Register(auth_user goth.User) (*user.User, error) {
+func (a *AuthServiceImpl) Register(auth_user goth.User) (*User, error) {
 	data, err := json.Marshal(auth_user)
 	if err != nil {
 		return nil, errors.New("couldn't marshal user")
 	}
 
-	user_model := user.UserSQL{
+	user_model := UserSQL{
 		ID:      sql.NullString{String: auth_user.UserID, Valid: true},
 		Email:   sql.NullString{String: auth_user.Email, Valid: true},
 		Name:    sql.NullString{String: auth_user.Name, Valid: true},
