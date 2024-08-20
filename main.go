@@ -43,6 +43,10 @@ func main() {
 		},
 	}
 
+	userRouter := user.UserRouter{
+		Controller: &user.UserControllerImpl{},
+	}
+
 	orgRouter := organizations.OrganizationRouter{
 		Controller: organizations.OrganizationControllerImpl{},
 	}
@@ -50,6 +54,6 @@ func main() {
 	user.AuthService.RegisterProviders() //register goth providers for authentication
 
 	// Start the server
-	s.Setup(&gistRouter, &authRouter, &orgRouter)
+	s.Setup(&gistRouter, &authRouter, &orgRouter, &userRouter)
 	s.Ignite()
 }
