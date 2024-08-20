@@ -67,6 +67,25 @@ func (u *UserSQL) GetByEmail() (*User, error) {
 	return &user, nil
 }
 
+func (u *UserSQL) GetByID() (*User, error) {
+	query := "SELECT user_id, email, name, picture FROM users WHERE user_id = $1"
+	row, err := storage.Database.Query(query, u.ID.String)
+
+	if err != nil {
+		log.Error(err)
+		return nil, errors.New("couldn't find user")
+	}
+
+	var user User
+	row.Next()
+	err = row.Scan(&user.ID, &user.Email, &user.Name, &user.Picture)
+	if err != nil {
+		log.Error(err)
+		return nil, errors.New("couldn't find user")
+	}
+	return &user, nil
+}
+
 func (u *UserSQL) Delete() error {
 	_, err := storage.Database.Exec("DELETE FROM users WHERE user_id = $1", u.ID.String)
 	if err != nil {

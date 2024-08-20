@@ -55,7 +55,7 @@ func TestCreateGists(t *testing.T) {
 		app := InitServerGists()
 		authToken := GetAuthToken(t, app)
 
-		body, req := utils.MakeRequest(t, app, "/gists", map[string]string{
+		body, req := utils.MakeRequest("POST", t, app, "/gists", map[string]string{
 			"name":    "Test Gist",
 			"content": "Test content",
 		}, map[string]string{
@@ -93,7 +93,7 @@ func TestCreateGists(t *testing.T) {
 			"org_id":  org.ID,
 		}
 
-		body, req := utils.MakeRequest(t, app, "/gists", payload, map[string]string{
+		body, req := utils.MakeRequest("POST", t, app, "/gists", payload, map[string]string{
 			"Authorization": fmt.Sprintf("Bearer %s", auth_token),
 		})
 

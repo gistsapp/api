@@ -9,25 +9,28 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func MakeRequest(t *testing.T, app *fiber.App, url string, payload interface{}, headers map[string]string) (map[string]string, *http.Response) {
+func MakeRequest(method string, t *testing.T, app *fiber.App, url string, payload interface{}, headers map[string]string) (map[string]string, *http.Response) {
 	// Marshal payload to JSON
 	jsonPayload, err := json.Marshal(payload)
 	if err != nil {
 		t.Fatalf("Failed to marshal JSON: %v", err)
 	}
+	var req *http.Request
 
 	// Create a new HTTP request
-	req, err := http.NewRequest("POST", url, strings.NewReader(string(jsonPayload)))
+	if method == "GET" {
+		req, err = http.NewRequest("GET", url, nil)
+	} else {
+		req, err = http.NewRequest("POST", url, strings.NewReader(string(jsonPayload)))
+		req.Header.Add("Content-Type", "application/json")
+
+	}
 	if err != nil {
 		t.Fatalf("Failed to create request: %v", err)
 	}
 
-	req.Header.Add("Content-Type", "application/json")
-
-	if headers != nil {
-		for key, value := range headers {
-			req.Header.Add(key, value)
-		}
+	for key, value := range headers {
+		req.Header.Add(key, value)
 	}
 
 	// Test the request using Fiber's testing framework

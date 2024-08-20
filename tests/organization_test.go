@@ -17,8 +17,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-var endpoint = "http://localhost:4000"
-
 func InitServerOrgs() *fiber.App {
 	// Check for command-line arguments
 	if len(os.Args) > 1 && os.Args[1] == "migrate" {
@@ -70,7 +68,7 @@ func TestCreateOrganization(t *testing.T) {
 		}
 		fmt.Println(org_payload)
 		//
-		body, _ := utils.MakeRequest(t, app, "/orgs", org_payload, map[string]string{
+		body, _ := utils.MakeRequest("POST", t, app, "/orgs", org_payload, map[string]string{
 			"Authorization": "Bearer " + auth_token,
 		})
 		//
