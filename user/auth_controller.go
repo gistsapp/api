@@ -1,4 +1,4 @@
-package auth
+package user
 
 import (
 	"github.com/gistapp/api/utils"
@@ -12,7 +12,7 @@ type IAuthController interface {
 	VerifyAuthToken() fiber.Handler
 }
 
-type AuthControllerImpl struct{
+type AuthControllerImpl struct {
 	AuthService IAuthService
 }
 

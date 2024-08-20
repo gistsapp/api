@@ -1,18 +1,6 @@
-package server
+package user
 
-import (
-	"github.com/gistapp/api/user"
-	"github.com/gofiber/fiber/v2"
-)
-
-func AuthorizationCookieMiddleware(ctx *fiber.Ctx) error {
-	cookie := ctx.Cookies("auth")
-	if cookie == "" {
-		return ctx.Next()
-	}
-	ctx.Request().Header.Set("Authorization", "Bearer "+cookie)
-	return ctx.Next()
-}
+import "github.com/gofiber/fiber/v2"
 
 func AuthNeededMiddleware(ctx *fiber.Ctx) error {
 	if ctx.Get("Authorization") == "" {
@@ -21,7 +9,7 @@ func AuthNeededMiddleware(ctx *fiber.Ctx) error {
 		})
 	}
 	raw_token := string(ctx.Request().Header.Peek("Authorization")[7:])
-	claims, err := user.AuthService.IsAuthenticated(raw_token)
+	claims, err := AuthService.IsAuthenticated(raw_token)
 	if err != nil {
 		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": "Unauthorized",

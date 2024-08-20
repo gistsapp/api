@@ -1,12 +1,12 @@
 package mock
 
 import (
-	"github.com/gistapp/api/auth"
+	"github.com/gistapp/api/user"
 	"github.com/gofiber/fiber/v2"
 )
 
-type MockAuthController struct{
-	AuthService auth.IAuthService
+type MockAuthController struct {
+	AuthService user.IAuthService
 }
 
 func (a *MockAuthController) Callback() fiber.Handler {
@@ -23,7 +23,7 @@ func (a *MockAuthController) Authenticate() fiber.Handler {
 
 func (a *MockAuthController) LocalAuth() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		e := new(auth.AuthLocalValidator)
+		e := new(user.AuthLocalValidator)
 		if err := c.BodyParser(e); err != nil {
 			return c.Status(400).SendString("Request must be valid JSON with field email as text")
 		}
@@ -39,7 +39,7 @@ func (a *MockAuthController) LocalAuth() fiber.Handler {
 
 func (a *MockAuthController) VerifyAuthToken() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		e := new(auth.AuthLocalVerificationValidator)
+		e := new(user.AuthLocalVerificationValidator)
 
 		if err := c.BodyParser(e); err != nil {
 			return c.Status(400).SendString("Request must be valid JSON with fields token and email as text")

@@ -6,7 +6,6 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/gistapp/api/auth"
 	"github.com/gistapp/api/user"
 	"github.com/gistapp/api/utils"
 	"github.com/gofiber/fiber/v2"
@@ -20,12 +19,12 @@ func (m *MockAuthService) Authenticate(c *fiber.Ctx) error {
 	return nil
 }
 
-func (m *MockAuthService) LocalAuth(email string) (auth.TokenSQL, error) {
+func (m *MockAuthService) LocalAuth(email string) (user.TokenSQL, error) {
 	token_val := utils.GenToken(6)
-	token_model := auth.TokenSQL{
+	token_model := user.TokenSQL{
 		Keyword: sql.NullString{String: email, Valid: true},
 		Value:   sql.NullString{String: token_val, Valid: true},
-		Type:    sql.NullString{String: string(auth.LocalAuth), Valid: true},
+		Type:    sql.NullString{String: string(user.LocalAuth), Valid: true},
 	}
 
 	_, err := token_model.Save()
@@ -35,10 +34,10 @@ func (m *MockAuthService) LocalAuth(email string) (auth.TokenSQL, error) {
 }
 
 func (m *MockAuthService) VerifyLocalAuthToken(token string, email string) (string, error) {
-	token_model := auth.TokenSQL{
+	token_model := user.TokenSQL{
 		Value:   sql.NullString{String: token, Valid: true},
 		Keyword: sql.NullString{String: email, Valid: true},
-		Type:    sql.NullString{String: string(auth.LocalAuth), Valid: true},
+		Type:    sql.NullString{String: string(user.LocalAuth), Valid: true},
 	}
 	token_data, err := token_model.Get()
 	if err != nil {
@@ -80,8 +79,8 @@ func (m *MockAuthService) Callback(c *fiber.Ctx) (string, error) {
 	return "", nil
 }
 
-func (a *MockAuthService) GetUser(auth_user goth.User) (*user.User, *auth.AuthIdentity, error) {
-	return auth.AuthService.GetUser(auth_user)
+func (a *MockAuthService) GetUser(auth_user goth.User) (*user.User, *user.AuthIdentity, error) {
+	return user.AuthService.GetUser(auth_user)
 }
 
 func (m *MockAuthService) Register(auth_user goth.User) (*user.User, error) {
@@ -103,7 +102,7 @@ func (m *MockAuthService) Register(auth_user goth.User) (*user.User, error) {
 		return nil, err
 	}
 
-	auth_identity_model := auth.AuthIdentitySQL{
+	auth_identity_model := user.AuthIdentitySQL{
 		Data:       sql.NullString{String: string(data), Valid: true},
 		Type:       sql.NullString{String: auth_user.Provider, Valid: true},
 		OwnerID:    sql.NullString{String: user_data.ID, Valid: true},
@@ -114,14 +113,14 @@ func (m *MockAuthService) Register(auth_user goth.User) (*user.User, error) {
 	return user_data, err
 }
 
-func (a *MockAuthService) IsAuthenticated(token string) (*auth.JWTClaim, error) {
+func (a *MockAuthService) IsAuthenticated(token string) (*user.JWTClaim, error) {
 	claims, err := utils.VerifyJWT(token)
 
 	if err != nil {
 		return nil, err
 	}
 
-	jwtClaim := new(auth.JWTClaim)
+	jwtClaim := new(user.JWTClaim)
 	jwtClaim.Pub = claims["pub"].(string)
 	jwtClaim.Email = claims["email"].(string)
 

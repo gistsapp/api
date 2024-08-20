@@ -1,7 +1,7 @@
 package gists
 
 import (
-	"github.com/gistapp/api/server"
+	"github.com/gistapp/api/user"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -10,7 +10,7 @@ type GistRouter struct {
 }
 
 func (r *GistRouter) SubscribeRoutes(app *fiber.Router) {
-	gists_router := (*app).Group("/gists", server.AuthNeededMiddleware)
+	gists_router := (*app).Group("/gists", user.AuthNeededMiddleware)
 
 	gists_router.Post("/", r.Controller.Save())
 	gists_router.Patch("/:id/name", r.Controller.UpdateName())

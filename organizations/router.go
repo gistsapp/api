@@ -1,7 +1,7 @@
 package organizations
 
 import (
-	"github.com/gistapp/api/server"
+	"github.com/gistapp/api/user"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -10,7 +10,7 @@ type OrganizationRouter struct {
 }
 
 func (r *OrganizationRouter) SubscribeRoutes(app *fiber.Router) {
-	organizations_router := (*app).Group("/orgs", server.AuthNeededMiddleware)
+	organizations_router := (*app).Group("/orgs", user.AuthNeededMiddleware)
 
 	organizations_router.Post("/", r.Controller.Save())
 	organizations_router.Get("/", r.Controller.GetAsMember())

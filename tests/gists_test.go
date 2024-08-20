@@ -6,12 +6,12 @@ import (
 	"os"
 	"testing"
 
-	"github.com/gistapp/api/auth"
 	"github.com/gistapp/api/gists"
 	"github.com/gistapp/api/organizations"
 	"github.com/gistapp/api/server"
 	"github.com/gistapp/api/storage"
 	"github.com/gistapp/api/tests/mock"
+	"github.com/gistapp/api/user"
 	"github.com/gistapp/api/utils"
 	"github.com/gofiber/fiber/v2"
 )
@@ -34,7 +34,7 @@ func InitServerGists() *fiber.App {
 		Controller: gists.GistController,
 	}
 
-	auth_router := auth.AuthRouter{
+	auth_router := user.AuthRouter{
 		Controller: &mock.MockAuthController{
 			//needs GetUser to fit the auth interface
 			AuthService: &mock.MockAuthService{},
@@ -55,7 +55,7 @@ func TestCreateGists(t *testing.T) {
 		app := InitServerGists()
 		authToken := GetAuthToken(t, app)
 
-		body, req := utils.MakeRequest(t, app, "/gists", map[string]string{
+		body, req := utils.MakeRequest("POST", t, app, "/gists", map[string]string{
 			"name":    "Test Gist",
 			"content": "Test content",
 		}, map[string]string{
@@ -73,7 +73,7 @@ func TestCreateGists(t *testing.T) {
 	t.Run("Create a new organization gist", func(t *testing.T) {
 		app := InitServerGists()
 		auth_token := GetAuthToken(t, app)
-		claims, _ := auth.AuthService.IsAuthenticated(auth_token)
+		claims, _ := user.AuthService.IsAuthenticated(auth_token)
 
 		org_mod := organizations.OrganizationSQL{
 			Name: sql.NullString{
@@ -93,7 +93,7 @@ func TestCreateGists(t *testing.T) {
 			"org_id":  org.ID,
 		}
 
-		body, req := utils.MakeRequest(t, app, "/gists", payload, map[string]string{
+		body, req := utils.MakeRequest("POST", t, app, "/gists", payload, map[string]string{
 			"Authorization": fmt.Sprintf("Bearer %s", auth_token),
 		})
 

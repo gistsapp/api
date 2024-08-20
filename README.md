@@ -14,13 +14,14 @@ Check the [API documentation](http://localhost:4000) for more information (for n
 - Air
 - docker compose
 - migrate
+- Just
 
 ### Onboarding script
 
 ```bash
 docker compose up -d
-migrate -path=migrations -database "postgresql://postgres:postgres@0.0.0.0:5432/gists?sslmode=disable" -verbose up
-air
+just migrate
+just dev
 ```
 
 ## Installation
@@ -52,17 +53,21 @@ MAIL_SMTP="<REDACTED>"
 MAIL_PASSWORD="<REDACTED>"
 SMTP_PORT="<REDACTED>"
 SMTP_HOST="<REDACTED>"
+APP_KEY="<REDACTED>"
 ```
 
-4. Run the server
+4. Run the server in development mode
 
 ```bash
+just dev
+# or
 air
 ```
 
 ## Configuration
 
-All the configuration is done through env variables : 
+All the configuration is done through env variables :
+
 - `PORT` : the port on which your web server runs
 - `PG_USER` : the postgres user
 - `PG_PASSWORD` : the postgres password
@@ -75,13 +80,20 @@ All the configuration is done through env variables :
 - `GOOGLE_SECRET` : your google client secret for OAUTH2
 - `GITHUB_KEY` : your github client key for OAUTH2
 - `GITHUB_SECRET` : your github client secret for OAUTH2
+- `MAIL_SMTP` : your smtp server
+- `MAIL_PASSWORD` : your smtp password
+- `SMTP_PORT` : your smtp port
+- `SMTP_HOST` : your smtp host
+- `APP_KEY` : your app key, which is a random string that is used to encrypt access tokens
 
 ## Tests
 
 To run tests, execute:
 
 ```bash
-go test .
+just test <your-test-name>
+# or to run all tests
+just test-all
 ```
 
 ## Migrations
@@ -96,15 +108,8 @@ migrate create -ext=sql -dir=migrations -seq init
 
 To run the existing migrations locally :
 
-### With bash
-
 ```bash
+just migrate
+# or
 migrate -path=migrations -database "postgresql://postgres:postgres@0.0.0.0:5432/gists?sslmode=disable" -verbose up
-```
-
-### With go
-
-```bash
-go build main.go
-./main migrate
 ```
