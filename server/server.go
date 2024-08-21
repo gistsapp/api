@@ -49,6 +49,8 @@ func (s *Server) Setup(routers ...DomainRouter) {
 		AllowOrigins:     utils.Get("FRONTEND_URL"),
 	}))
 
+	s.App.Use(AuthorizationCookieMiddleware)
+
 	s.App.Use(logger.New())
 
 	custom_router := s.App.Group("/")
