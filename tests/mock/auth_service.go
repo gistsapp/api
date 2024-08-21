@@ -64,7 +64,7 @@ func (m *MockAuthService) VerifyLocalAuthToken(token string, email string) (stri
 		return jwt_token, nil
 	}
 
-	user, err := m.Register(goth_user)
+	user, err := m.Register(withEmailPrefix(goth_user))
 
 	if err != nil {
 		return "", err
@@ -83,19 +83,48 @@ func (a *MockAuthService) GetUser(auth_user goth.User) (*user.User, *user.AuthId
 	return user.AuthService.GetUser(auth_user)
 }
 
-func (m *MockAuthService) Register(auth_user goth.User) (*user.User, error) {
+func (a *MockAuthService) IsAuthenticated(token string) (*user.JWTClaim, error) {
+	claims, err := utils.VerifyJWT(token)
+
+	if err != nil {
+		return nil, err
+	}
+
+	jwtClaim := new(user.JWTClaim)
+	jwtClaim.Pub = claims["pub"].(string)
+	jwtClaim.Email = claims["email"].(string)
+
+	return jwtClaim, nil
+}
+
+func withEmailPrefix(auth_user goth.User) *user.RegistrationOptions {
+	return &user.RegistrationOptions{
+		SqlUser: &user.UserSQL{
+			ID:      sql.NullString{String: auth_user.UserID, Valid: true},
+			Email:   sql.NullString{String: auth_user.Email, Valid: true},
+			Name:    sql.NullString{String: strings.Split(auth_user.Email, "@")[0], Valid: true},
+			Picture: sql.NullString{String: auth_user.AvatarURL, Valid: true},
+		},
+		AuthUser: auth_user,
+	}
+}
+
+func withGithubUsername(auth_user goth.User) *user.RegistrationOptions {
+	return &user.RegistrationOptions{SqlUser: &user.UserSQL{
+		ID:    sql.NullString{String: auth_user.UserID, Valid: true},
+		Email: sql.NullString{String: auth_user.Email, Valid: true},
+		Name:  sql.NullString{String: auth_user.RawData["login"].(string), Valid: true},
+	}, AuthUser: auth_user}
+}
+
+func (a *MockAuthService) Register(options *user.RegistrationOptions) (*user.User, error) {
+	auth_user := options.AuthUser
 	data, err := json.Marshal(auth_user)
 	if err != nil {
 		return nil, errors.New("couldn't marshal user")
 	}
 
-	user_model := user.UserSQL{
-		ID:      sql.NullString{String: auth_user.UserID, Valid: true},
-		Email:   sql.NullString{String: auth_user.Email, Valid: true},
-		Name:    sql.NullString{String: auth_user.Name, Valid: true},
-		Picture: sql.NullString{String: auth_user.AvatarURL, Valid: true},
-	}
-
+	user_model := options.SqlUser
 	user_data, err := user_model.Save()
 
 	if err != nil {
@@ -111,20 +140,6 @@ func (m *MockAuthService) Register(auth_user goth.User) (*user.User, error) {
 
 	_, err = auth_identity_model.Save()
 	return user_data, err
-}
-
-func (a *MockAuthService) IsAuthenticated(token string) (*user.JWTClaim, error) {
-	claims, err := utils.VerifyJWT(token)
-
-	if err != nil {
-		return nil, err
-	}
-
-	jwtClaim := new(user.JWTClaim)
-	jwtClaim.Pub = claims["pub"].(string)
-	jwtClaim.Email = claims["email"].(string)
-
-	return jwtClaim, nil
 }
 
 func (a *MockAuthService) RegisterProviders() {

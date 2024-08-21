@@ -21,7 +21,7 @@ type IAuthService interface {
 	VerifyLocalAuthToken(token string, email string) (string, error)
 	Callback(c *fiber.Ctx) (string, error)
 	GetUser(auth_user goth.User) (*User, *AuthIdentity, error)
-	Register(auth_user goth.User) (*User, error)
+	Register(options *RegistrationOptions) (*User, error)
 	RegisterProviders()
 	IsAuthenticated(token string) (*JWTClaim, error)
 }
@@ -89,7 +89,7 @@ func (a *AuthServiceImpl) VerifyLocalAuthToken(token string, email string) (stri
 		return jwt_token, nil
 	}
 
-	user, err := a.Register(goth_user)
+	user, err := a.Register(withEmailPrefix(goth_user))
 
 	if err != nil {
 		return "", err
@@ -101,6 +101,7 @@ func (a *AuthServiceImpl) VerifyLocalAuthToken(token string, email string) (stri
 }
 
 func (a *AuthServiceImpl) Callback(c *fiber.Ctx) (string, error) {
+	provider := c.Params("provider")
 	auth_user, err := goth_fiber.CompleteUserAuth(c)
 	if err != nil {
 		log.Error(err)
@@ -117,7 +118,12 @@ func (a *AuthServiceImpl) Callback(c *fiber.Ctx) (string, error) {
 		return token, nil
 	}
 
-	user_md, err = a.Register(auth_user)
+	log.Info(auth_user.NickName)
+	if provider == "github" {
+		user_md, err = a.Register(withGithubUsername(auth_user))
+	} else {
+		user_md, err = a.Register(withEmailPrefix(auth_user))
+	}
 
 	if err != nil {
 		return "", err
@@ -140,19 +146,41 @@ func (a *AuthServiceImpl) GetUser(auth_user goth.User) (*User, *AuthIdentity, er
 	return &auth_and_user.User, &auth_and_user.AuthIdentity, nil
 }
 
-func (a *AuthServiceImpl) Register(auth_user goth.User) (*User, error) {
+type RegistrationOptions struct {
+	AuthUser goth.User
+	SqlUser  *UserSQL
+}
+
+func withEmailPrefix(user goth.User) *RegistrationOptions {
+	return &RegistrationOptions{
+		SqlUser: &UserSQL{
+			ID:      sql.NullString{String: user.UserID, Valid: true},
+			Email:   sql.NullString{String: user.Email, Valid: true},
+			Name:    sql.NullString{String: strings.Split(user.Email, "@")[0], Valid: true},
+			Picture: sql.NullString{String: user.AvatarURL, Valid: true},
+		},
+		AuthUser: user,
+	}
+}
+
+func withGithubUsername(user goth.User) *RegistrationOptions {
+	return &RegistrationOptions{SqlUser: &UserSQL{
+		ID:      sql.NullString{String: user.UserID, Valid: true},
+		Email:   sql.NullString{String: user.Email, Valid: true},
+		Name:    sql.NullString{String: user.NickName, Valid: true},
+		Picture: sql.NullString{String: user.AvatarURL, Valid: true},
+	}, AuthUser: user}
+}
+
+func (a *AuthServiceImpl) Register(options *RegistrationOptions) (*User, error) {
+	log.Info(options)
+	auth_user := options.AuthUser
 	data, err := json.Marshal(auth_user)
 	if err != nil {
 		return nil, errors.New("couldn't marshal user")
 	}
 
-	user_model := UserSQL{
-		ID:      sql.NullString{String: auth_user.UserID, Valid: true},
-		Email:   sql.NullString{String: auth_user.Email, Valid: true},
-		Name:    sql.NullString{String: auth_user.Name, Valid: true},
-		Picture: sql.NullString{String: auth_user.AvatarURL, Valid: true},
-	}
-
+	user_model := options.SqlUser
 	user_data, err := user_model.Save()
 
 	if err != nil {
