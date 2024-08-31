@@ -85,7 +85,7 @@ func (o *OrganizationSQL) GetByMember(user_id string) ([]Organization, error) {
 }
 
 func (o *OrganizationSQL) GetByID(user_id string, org_id string) (*Organization, error) {
-	query := "SELECT o.org_id, o.name, gists.gist_id FROM organization o JOIN gists ON o.org_id = gists.org_id WHERE o.org_id=$1 AND owner=$2"
+	query := "SELECT o.org_id, o.name, gists.gist_id FROM organization o JOIN gists ON o.org_id = gists.org_id WHERE o.org_id=$1 AND gists.owner=$2"
 	log.Info("user is ", user_id)
 
 	rows, err := storage.Database.Query(query, org_id, user_id)
