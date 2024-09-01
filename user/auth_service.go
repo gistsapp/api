@@ -49,7 +49,27 @@ func (a *AuthServiceImpl) LocalAuth(email string) (TokenSQL, error) {
 	_, err := token_model.Save()
 
 	if err != nil {
-		return token_model, err
+		log.Info(err.Error())
+		if strings.Contains(err.Error(), "token_keyword_key") {
+			token, err := token_model.GetByType(LocalAuth)
+			log.Info(token)
+
+			if err != nil {
+				return token_model, err
+			}
+
+			err = token.Delete()
+
+			if err != nil {
+				return token_model, err
+			}
+
+			_, err = token_model.Save()
+
+			if err != nil {
+				return token_model, err
+			}
+		}
 	}
 
 	err = utils.SendEmail("Gistapp: Local Auth", "Your token is: "+token_val, email)

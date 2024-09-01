@@ -31,8 +31,7 @@ type Token struct {
 func (t *TokenSQL) Save() (*Token, error) {
 	row, err := storage.Database.Query("INSERT INTO token(type, value, keyword) VALUES ($1, $2, $3) RETURNING token_id, type, value, keyword", t.Type.String, t.Value.String, t.Keyword.String)
 	if err != nil {
-		log.Error(err)
-		return nil, errors.New("couldn't create token")
+		return nil, err
 	}
 	var token Token
 	row.Next()
@@ -46,6 +45,22 @@ func (t *TokenSQL) Save() (*Token, error) {
 
 func (t *TokenSQL) Get() (*Token, error) {
 	row, err := storage.Database.Query("SELECT token_id, type, value, keyword FROM token WHERE type = $1 AND keyword = $2", t.Type.String, t.Keyword.String)
+	if err != nil {
+		log.Error(err)
+		return nil, errors.New("couldn't find token")
+	}
+	var token Token
+	row.Next()
+	err = row.Scan(&token.ID, &token.Type, &token.Value, &token.Keyword)
+	if err != nil {
+		log.Error(err)
+		return nil, errors.New("couldn't find token")
+	}
+	return &token, nil
+}
+
+func (t *TokenSQL) GetByType(_type TokenType) (*Token, error) {
+	row, err := storage.Database.Query("SELECT token_id, type, value, keyword FROM token WHERE type = $1", string(_type))
 	if err != nil {
 		log.Error(err)
 		return nil, errors.New("couldn't find token")
