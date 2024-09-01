@@ -66,7 +66,6 @@ func TestCreateOrganization(t *testing.T) {
 		org_payload := map[string]string{
 			"name": "Test Organization",
 		}
-		fmt.Println(org_payload)
 		//
 		body, _ := utils.MakeRequest("POST", t, app, "/orgs", org_payload, map[string]string{
 			"Authorization": "Bearer " + auth_token,
@@ -77,21 +76,68 @@ func TestCreateOrganization(t *testing.T) {
 		}
 
 		// cleanup
-		id, err := strconv.ParseInt(body["id"], 10, 32)
+		DeleteOrganization(t, body["id"])
+		DeleteAuthUser(t, auth_token)
+	})
 
-		if err != nil {
-			t.Errorf("Failed to parse organization ID: %v", err)
+}
+
+func DeleteOrganization(t *testing.T, org_id string) {
+	id, err := strconv.ParseInt(org_id, 10, 32)
+
+	if err != nil {
+		t.Errorf("Failed to parse organization ID: %v", err)
+	}
+
+	org := organizations.OrganizationSQL{
+		ID: sql.NullInt32{
+			Int32: int32(id),
+			Valid: true,
+		},
+	}
+	if err = org.Delete(); err != nil {
+		t.Errorf("Failed to delete organization: %v", err)
+		return
+	}
+
+}
+
+func TestDeleteOrganization(t *testing.T) {
+	t.Run("Delete organization", func(t *testing.T) {
+		app := InitServerOrgs()
+		if app == nil {
+			t.Fatal("Failed to initialize the application")
 		}
 
-		org := organizations.OrganizationSQL{
+		auth_token := GetAuthToken(t, app)
+
+		org_payload := map[string]string{
+			"name": "Test Organization",
+		}
+
+		body, _ := utils.MakeRequest("POST", t, app, "/orgs", org_payload, map[string]string{
+			"Authorization": "Bearer " + auth_token,
+		}) //before previous test tests the creation, we should be pretty sure that the creation works
+
+		id, _ := strconv.ParseInt(body["id"], 10, 32)
+
+		body, _ = utils.MakeRequest("DELETE", t, app, fmt.Sprintf("/orgs/%d", id), nil, map[string]string{
+			"Authorization": "Bearer " + auth_token,
+		})
+
+		org_dto := organizations.OrganizationSQL{
 			ID: sql.NullInt32{
 				Int32: int32(id),
 				Valid: true,
 			},
 		}
-		if err = org.Delete(); err != nil {
-			t.Errorf("Failed to delete organization: %v", err)
+
+		_, err := org_dto.Get()
+
+		if err == nil {
+			t.Fatal("Organization was not deleted")
 		}
+
 		DeleteAuthUser(t, auth_token)
 	})
 }

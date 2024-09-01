@@ -129,3 +129,26 @@ func (o *OrganizationSQL) GetByID(user_id string, org_id string) (*Organization,
 		Gists: gists_ids,
 	}, nil
 }
+
+func (o *OrganizationSQL) Get() (*Organization, error) {
+	query := "SELECT org_id, name FROM organization WHERE org_id = $1"
+
+	row, err := storage.Database.Query(query, o.ID.Int32)
+
+	if err != nil {
+		return nil, errors.New("couldn't find organization")
+	}
+
+	row.Next()
+
+	var organization Organization
+
+	err = row.Scan(&organization.ID, &organization.Name)
+
+	if err != nil {
+		return nil, errors.New("couldn't find organization")
+	}
+
+	return &organization, nil
+
+}

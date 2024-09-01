@@ -15,4 +15,5 @@ func (r *OrganizationRouter) SubscribeRoutes(app *fiber.Router) {
 	organizations_router.Post("/", r.Controller.Save())
 	organizations_router.Get("/", r.Controller.GetAsMember())
 	organizations_router.Get("/:id", r.Controller.GetByID())
+	organizations_router.Delete("/:id", r.Controller.Delete())
 }

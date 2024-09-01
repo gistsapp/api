@@ -21,7 +21,7 @@ func MakeRequest(method string, t *testing.T, app *fiber.App, url string, payloa
 	if method == "GET" {
 		req, err = http.NewRequest("GET", url, nil)
 	} else {
-		req, err = http.NewRequest("POST", url, strings.NewReader(string(jsonPayload)))
+		req, err = http.NewRequest(method, url, strings.NewReader(string(jsonPayload)))
 		req.Header.Add("Content-Type", "application/json")
 
 	}
@@ -39,14 +39,18 @@ func MakeRequest(method string, t *testing.T, app *fiber.App, url string, payloa
 		t.Fatalf("Failed to execute request: %v", err)
 	}
 
-	if resp.StatusCode != 200 && resp.StatusCode != 201 {
-		t.Errorf("Expected status code 200 or 201, got %d", resp.StatusCode)
+	if resp.StatusCode == 204 {
+		return nil, resp
 	}
 
 	// Decode the response body into a map
 	respBody := make(map[string]string)
 	if err := json.NewDecoder(resp.Body).Decode(&respBody); err != nil {
 		t.Fatalf("Failed to decode response: %v", err)
+	}
+
+	if resp.StatusCode != 200 && resp.StatusCode != 201 {
+		t.Errorf("Expected status code 200 or 201, got %d with body %v", resp.StatusCode, respBody)
 	}
 
 	return respBody, resp

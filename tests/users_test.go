@@ -77,5 +77,7 @@ func TestRetreiveUser(t *testing.T) {
 		}
 
 		log.Info(body)
+
+		DeleteAuthUser(t, auth_token)
 	})
 }
