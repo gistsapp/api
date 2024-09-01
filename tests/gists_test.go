@@ -53,20 +53,20 @@ func InitServerGists() *fiber.App {
 func TestCreateGists(t *testing.T) {
 	t.Run("Create a new personal gist", func(t *testing.T) {
 		app := InitServerGists()
-		authToken := GetAuthToken(t, app)
+		auth_token := GetAuthToken(t, app)
 
-		body, req := utils.MakeRequest("POST", t, app, "/gists", map[string]string{
+		_, req := utils.MakeRequest("POST", t, app, "/gists", map[string]string{
 			"name":    "Test Gist",
 			"content": "Test content",
 		}, map[string]string{
-			"Authorization": fmt.Sprintf("Bearer %s", authToken),
+			"Authorization": fmt.Sprintf("Bearer %s", auth_token),
 		})
 
 		if req.StatusCode != 201 {
 			t.Fatalf("Expected status code 201, got %d", req.StatusCode)
 		}
 
-		fmt.Println(body)
+		DeleteAuthUser(t, auth_token)
 
 	})
 
@@ -102,7 +102,7 @@ func TestCreateGists(t *testing.T) {
 		}
 
 		fmt.Println(body)
-
+		DeleteOrganization(t, org.ID)
 		DeleteAuthUser(t, auth_token)
 
 	})

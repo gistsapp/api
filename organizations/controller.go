@@ -52,3 +52,18 @@ func (c *OrganizationControllerImpl) GetByID() fiber.Handler {
 		return c.JSON(org)
 	}
 }
+
+func (c *OrganizationControllerImpl) Delete() fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		org_id := c.Params("id")
+		user_id := c.Locals("pub").(string)
+		err := OrganizationService.Delete(org_id, user_id)
+		if err != nil {
+			if err == ErrUserNotOwner {
+				return c.Status(401).SendString(err.Error())
+			}
+			return c.Status(400).SendString(err.Error())
+		}
+		return c.SendStatus(204)
+	}
+}
