@@ -33,7 +33,13 @@ func (a *AuthControllerImpl) Callback() fiber.Handler {
 		}
 		token_cookie := new(fiber.Cookie)
 		token_cookie.Name = "gists.access_token"
-		token_cookie.HTTPOnly = false
+		token_cookie.HTTPOnly = true
+		if utils.Get("ENV") == "development" {
+			token_cookie.Secure = false
+		} else {
+			token_cookie.Domain = ".gists.app" // hardcoded
+			token_cookie.Secure = true
+		}
 		token_cookie.Value = token
 		c.Cookie(token_cookie)
 		return c.Redirect(utils.Get("FRONTEND_URL"))
@@ -82,6 +88,13 @@ func (a *AuthControllerImpl) VerifyAuthToken() fiber.Handler {
 		token_cookie.Name = "gists.access_token"
 		token_cookie.HTTPOnly = true
 		token_cookie.Value = jwt_token
+
+		if utils.Get("ENV") == "development" {
+			token_cookie.Secure = false
+		} else {
+			token_cookie.Domain = ".gists.app" // hardcoded
+			token_cookie.Secure = true
+		}
 		c.Cookie(token_cookie)
 		return c.Status(200).JSON(fiber.Map{"message": "You are now logged in"})
 	}

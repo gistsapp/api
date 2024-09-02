@@ -54,6 +54,7 @@ MAIL_PASSWORD="<REDACTED>"
 SMTP_PORT="<REDACTED>"
 SMTP_HOST="<REDACTED>"
 APP_KEY="<REDACTED>"
+ENV="development"
 ```
 
 4. Run the server in development mode
@@ -85,6 +86,7 @@ All the configuration is done through env variables :
 - `SMTP_PORT` : your smtp port
 - `SMTP_HOST` : your smtp host
 - `APP_KEY` : your app key, which is a random string that is used to encrypt access tokens
+- `ENV`: the environment in which the app is running (development, production)
 
 ## Tests
 
