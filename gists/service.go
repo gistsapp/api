@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"errors"
 	"strconv"
+
+	"github.com/gofiber/fiber/v2/log"
 )
 
 type GistServiceImpl struct{}
@@ -67,12 +69,12 @@ func (g *GistServiceImpl) Save(name string, content string, owner_id string, org
 	return gist, nil
 }
 
-func (g *GistServiceImpl) UpdateName(id string, name string, owner_id string) error {
+func (g *GistServiceImpl) UpdateName(id string, name string, owner_id string) (*Gist, error) {
 
 	f := gistExists(id, owner_id)
 
 	if f != nil {
-		return f
+		return nil, f
 	}
 
 	m := GistSQL{
@@ -94,18 +96,18 @@ func (g *GistServiceImpl) UpdateName(id string, name string, owner_id string) er
 			Valid:  true,
 		},
 	}
-	err := m.UpdateName(id)
+	gist, err := m.UpdateName(id)
 	if err != nil {
-		return errors.New("couldn't update name in database gists")
+		return nil, errors.New("couldn't update name in database gists")
 	}
-	return nil
+	return gist, nil
 }
 
-func (g *GistServiceImpl) UpdateContent(id string, content string, owner_id string) error {
+func (g *GistServiceImpl) UpdateContent(id string, content string, owner_id string) (*Gist, error) {
 	err := gistExists(id, owner_id)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 	m := GistSQL{
 		ID: sql.NullInt32{
@@ -127,11 +129,12 @@ func (g *GistServiceImpl) UpdateContent(id string, content string, owner_id stri
 		},
 	}
 
-	err = m.UpdateContent(id)
+	gist, err := m.UpdateContent(id)
 	if err != nil {
-		return errors.New("couldn't update content in database gists")
+		log.Error(err)
+		return nil, errors.New("couldn't update content in database gists")
 	}
-	return nil
+	return gist, nil
 }
 
 func (g *GistServiceImpl) Delete(id string, owner_id string) error {

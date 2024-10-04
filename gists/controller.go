@@ -35,13 +35,14 @@ func (g *GistControllerImpl) UpdateName() fiber.Handler {
 		}
 
 		owner_id := c.Locals("pub").(string)
-		if err := GistService.UpdateName(c.Params("id"), g.Name, owner_id); err != nil {
+		gist, err := GistService.UpdateName(c.Params("id"), g.Name, owner_id)
+		if err != nil {
 			if err == ErrGistNotFound {
 				return c.Status(404).SendString(err.Error())
 			}
 			return c.Status(400).SendString(err.Error()) //could be because gist not found
 		}
-		return c.Status(200).SendString("Gist updated successfully")
+		return c.Status(200).JSON(gist)
 	}
 }
 
@@ -76,13 +77,14 @@ func (g *GistControllerImpl) UpdateContent() fiber.Handler {
 		}
 
 		owner_id := c.Locals("pub").(string)
-		if err := GistService.UpdateContent(c.Params("id"), g.Content, owner_id); err != nil {
+		gist, err := GistService.UpdateContent(c.Params("id"), g.Content, owner_id)
+		if err != nil {
 			if err == ErrGistNotFound {
 				return c.Status(404).SendString(err.Error())
 			}
 			return c.Status(400).SendString(err.Error()) //could be because gist not found
 		}
-		return c.Status(200).SendString("Gist updated successfully")
+		return c.Status(200).JSON(gist)
 	}
 }
 
