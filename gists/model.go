@@ -60,22 +60,45 @@ func (g *GistSQL) Save() (*Gist, error) {
 	return &gist, nil
 }
 
-func (g *GistSQL) UpdateName(id string) error {
-	_, err := storage.Database.Exec("UPDATE gists SET name = $1 WHERE gist_id = $2 AND owner = $3", g.Name.String, id, g.OwnerID.String)
+func (g *GistSQL) UpdateName(id string) (*Gist, error) {
+	row, err := storage.Database.Query("UPDATE gists SET name = $1 WHERE gist_id = $2 AND owner = $3 RETURNING gist_id, name, content, owner", g.Name.String, id, g.OwnerID.String)
 	if err != nil {
 		log.Error(err)
-		return errors.New("couldn't update name")
+		return nil, errors.New("couldn't update name")
 	}
-	return nil
+
+	var gist Gist
+
+	row.Next()
+
+	err = row.Scan(&gist.ID, &gist.Name, &gist.Content, &gist.OwnerID)
+
+	if err != nil {
+		log.Error(err)
+		return nil, errors.New("couldn't scan gist")
+	}
+
+	return &gist, nil
 }
 
-func (g *GistSQL) UpdateContent(id string) error {
-	_, err := storage.Database.Exec("UPDATE gists SET content = $1 WHERE gist_id = $2 AND owner = $3", g.Content.String, id, g.OwnerID.String)
+func (g *GistSQL) UpdateContent(id string) (*Gist, error) {
+	row, err := storage.Database.Query("UPDATE gists SET content = $1 WHERE gist_id = $2 AND owner = $3 RETURNING gist_id, name, content, owner", g.Content.String, id, g.OwnerID.String)
 	if err != nil {
 		log.Error(err)
-		return errors.New("couldn't update content")
+		return nil, errors.New("couldn't update content")
 	}
-	return nil
+
+	var gist Gist
+
+	row.Next()
+
+	err = row.Scan(&gist.ID, &gist.Name, &gist.Content, &gist.OwnerID)
+	if err != nil {
+		log.Error(err)
+		return nil, errors.New("couldn't scan gist")
+	}
+
+	return &gist, nil
 }
 
 func (g *GistSQL) Delete(id string) error {
