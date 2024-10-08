@@ -42,7 +42,8 @@ func (a *AuthControllerImpl) Callback() fiber.Handler {
 		}
 		token_cookie.Value = token
 		c.Cookie(token_cookie)
-		return c.Redirect(utils.Get("FRONTEND_URL"))
+
+		return c.Redirect(utils.Get("FRONTEND_URL") + "/mygist")
 	}
 }
 
