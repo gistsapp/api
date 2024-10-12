@@ -102,7 +102,7 @@ func (a *AuthServiceImpl) VerifyLocalAuthToken(token string, email string) (stri
 	}
 
 	if user, _, err := a.GetUser(goth_user); err == nil {
-		jwt_token, err := utils.CreateToken(user.Email, user.ID)
+		jwt_token, err := utils.CreateAccessToken(user.Email, user.ID)
 		if err != nil {
 			return "", err
 		}
@@ -115,7 +115,7 @@ func (a *AuthServiceImpl) VerifyLocalAuthToken(token string, email string) (stri
 		return "", err
 	}
 
-	jwt_token, err := utils.CreateToken(user.Email, user.ID)
+	jwt_token, err := utils.CreateAccessToken(user.Email, user.ID)
 
 	return jwt_token, err
 }
@@ -131,7 +131,7 @@ func (a *AuthServiceImpl) Callback(c *fiber.Ctx) (string, error) {
 	user_md, _, err := a.GetUser(auth_user)
 
 	if err == nil {
-		token, err := utils.CreateToken(user_md.Email, user_md.ID)
+		token, err := utils.CreateAccessToken(user_md.Email, user_md.ID)
 		if err != nil {
 			return "", err
 		}
@@ -149,7 +149,7 @@ func (a *AuthServiceImpl) Callback(c *fiber.Ctx) (string, error) {
 		return "", err
 	}
 
-	jwt, err := utils.CreateToken(user_md.Email, user_md.ID)
+	jwt, err := utils.CreateAccessToken(user_md.Email, user_md.ID)
 	if err != nil {
 		return "", err
 	}
@@ -239,6 +239,17 @@ func (a *AuthServiceImpl) IsAuthenticated(token string) (*JWTClaim, error) {
 
 	return jwtClaim, nil
 }
+
+//verify refresh token and gives a new access token
+// func (a *AuthServiceImpl) RefreshAccessToken(refresh_token string) (string, error) {
+// 	claims, err := utils.VerifyJWT(refresh_token)
+//
+// 	if err != nil {
+// 		return "", err
+// 	}
+//
+// 	return utils.
+// }
 
 var AuthService AuthServiceImpl = AuthServiceImpl{}
 var ErrCantCompleteAuth = errors.New("can't complete auth")

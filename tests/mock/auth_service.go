@@ -57,7 +57,7 @@ func (m *MockAuthService) VerifyLocalAuthToken(token string, email string) (stri
 	}
 
 	if user, _, err := m.GetUser(goth_user); err == nil {
-		jwt_token, err := utils.CreateToken(user.Email, user.ID)
+		jwt_token, err := utils.CreateAccessToken(user.Email, user.ID)
 		if err != nil {
 			return "", err
 		}
@@ -70,7 +70,7 @@ func (m *MockAuthService) VerifyLocalAuthToken(token string, email string) (stri
 		return "", err
 	}
 
-	jwt_token, err := utils.CreateToken(user.Email, user.ID)
+	jwt_token, err := utils.CreateAccessToken(user.Email, user.ID)
 
 	return jwt_token, err
 }
