@@ -10,6 +10,7 @@ type IAuthController interface {
 	Authenticate() fiber.Handler
 	LocalAuth() fiber.Handler
 	VerifyAuthToken() fiber.Handler
+	Refresh() fiber.Handler
 }
 
 type AuthControllerImpl struct {
@@ -31,17 +32,8 @@ func (a *AuthControllerImpl) Callback() fiber.Handler {
 		if err != nil {
 			return c.Status(400).SendString(err.Error())
 		}
-		token_cookie := new(fiber.Cookie)
-		token_cookie.Name = "gists.access_token"
-		token_cookie.HTTPOnly = true
-		if utils.Get("ENV") == "development" {
-			token_cookie.Secure = false
-		} else {
-			token_cookie.Domain = ".gists.app" // hardcoded
-			token_cookie.Secure = true
-		}
-		token_cookie.Value = token
-		c.Cookie(token_cookie)
+		c.Cookie(utils.Cookie("gists.access_token", token.AccessToken))
+		c.Cookie(utils.Cookie("gists.refresh_token", token.RefreshToken))
 
 		return c.Redirect(utils.Get("FRONTEND_URL") + "/mygist")
 	}
@@ -85,19 +77,18 @@ func (a *AuthControllerImpl) VerifyAuthToken() fiber.Handler {
 			return c.Status(400).SendString(err.Error())
 		}
 
-		token_cookie := new(fiber.Cookie)
-		token_cookie.Name = "gists.access_token"
-		token_cookie.HTTPOnly = true
-		token_cookie.Value = jwt_token
+		c.Cookie(utils.Cookie("gists.access_token", jwt_token.AccessToken))   //set access token
+		c.Cookie(utils.Cookie("gists.refresh_token", jwt_token.RefreshToken)) //set refresh token
 
-		if utils.Get("ENV") == "development" {
-			token_cookie.Secure = false
-		} else {
-			token_cookie.Domain = ".gists.app" // hardcoded
-			token_cookie.Secure = true
-		}
-		c.Cookie(token_cookie)
 		return c.Status(200).JSON(fiber.Map{"message": "You are now logged in"})
+	}
+}
+
+func (a *AuthControllerImpl) Renew() fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		user_id := c.Locals("pub").(string)
+		user_email := c.Locals("email").(string)
+
 	}
 }
 

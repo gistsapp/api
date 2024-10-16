@@ -33,7 +33,7 @@ func (m *MockAuthService) LocalAuth(email string) (user.TokenSQL, error) {
 
 }
 
-func (m *MockAuthService) VerifyLocalAuthToken(token string, email string) (string, error) {
+func (m *MockAuthService) VerifyLocalAuthToken(token string, email string) (*user.Tokens, error) {
 	token_model := user.TokenSQL{
 		Value:   sql.NullString{String: token, Valid: true},
 		Keyword: sql.NullString{String: email, Valid: true},
@@ -41,11 +41,11 @@ func (m *MockAuthService) VerifyLocalAuthToken(token string, email string) (stri
 	}
 	token_data, err := token_model.Get()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	err = token_data.Delete()
 	if err != nil {
-		return "", errors.New("couldn't invalidate token")
+		return nil, errors.New("couldn't invalidate token")
 	}
 
 	//now we finish users registration
@@ -56,27 +56,35 @@ func (m *MockAuthService) VerifyLocalAuthToken(token string, email string) (stri
 		AvatarURL: "https://vercel.com/api/www/avatar/?u=" + email + "&s=80",
 	}
 
-	if user, _, err := m.GetUser(goth_user); err == nil {
-		jwt_token, err := utils.CreateAccessToken(user.Email, user.ID)
+	if auth_user, _, err := m.GetUser(goth_user); err == nil {
+		access_token, err := utils.CreateAccessToken(auth_user.Email, auth_user.ID)
+		refresh_token, err := utils.CreateRefreshToken(auth_user.ID)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
-		return jwt_token, nil
+		return &user.Tokens{
+			AccessToken:  access_token,
+			RefreshToken: refresh_token,
+		}, nil
 	}
 
-	user, err := m.Register(withEmailPrefix(goth_user))
+	auth_user, err := m.Register(withEmailPrefix(goth_user))
 
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	jwt_token, err := utils.CreateAccessToken(user.Email, user.ID)
+	jwt_token, err := utils.CreateAccessToken(auth_user.Email, auth_user.ID)
+	refresh_token, err := utils.CreateRefreshToken(auth_user.ID)
 
-	return jwt_token, err
+	return &user.Tokens{
+		AccessToken:  jwt_token,
+		RefreshToken: refresh_token,
+	}, err
 }
 
-func (m *MockAuthService) Callback(c *fiber.Ctx) (string, error) {
-	return "", nil
+func (m *MockAuthService) Callback(c *fiber.Ctx) (*user.Tokens, error) {
+	return nil, nil
 }
 
 func (a *MockAuthService) GetUser(auth_user goth.User) (*user.User, *user.AuthIdentity, error) {

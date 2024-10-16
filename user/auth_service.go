@@ -15,14 +15,20 @@ import (
 	"github.com/shareed2k/goth_fiber"
 )
 
+type Tokens struct {
+	AccessToken  string
+	RefreshToken string
+}
+
 type IAuthService interface {
 	Authenticate(c *fiber.Ctx) error
 	LocalAuth(email string) (TokenSQL, error)
-	VerifyLocalAuthToken(token string, email string) (string, error)
-	Callback(c *fiber.Ctx) (string, error)
+	VerifyLocalAuthToken(token string, email string) (*Tokens, error)
+	Callback(c *fiber.Ctx) (*Tokens, error)
 	GetUser(auth_user goth.User) (*User, *AuthIdentity, error)
 	Register(options *RegistrationOptions) (*User, error)
 	RegisterProviders()
+	Renew(user_id string) (*Tokens, error)
 	IsAuthenticated(token string) (*JWTClaim, error)
 }
 
@@ -78,7 +84,7 @@ func (a *AuthServiceImpl) LocalAuth(email string) (TokenSQL, error) {
 }
 
 // verifies the token and finishes the registration
-func (a *AuthServiceImpl) VerifyLocalAuthToken(token string, email string) (string, error) {
+func (a *AuthServiceImpl) VerifyLocalAuthToken(token string, email string) (*Tokens, error) {
 	token_model := TokenSQL{
 		Value:   sql.NullString{String: token, Valid: true},
 		Keyword: sql.NullString{String: email, Valid: true},
@@ -86,11 +92,11 @@ func (a *AuthServiceImpl) VerifyLocalAuthToken(token string, email string) (stri
 	}
 	token_data, err := token_model.Get()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	err = token_data.Delete()
 	if err != nil {
-		return "", errors.New("couldn't invalidate token")
+		return nil, errors.New("couldn't invalidate token")
 	}
 
 	//now we finish users registration
@@ -102,40 +108,53 @@ func (a *AuthServiceImpl) VerifyLocalAuthToken(token string, email string) (stri
 	}
 
 	if user, _, err := a.GetUser(goth_user); err == nil {
-		jwt_token, err := utils.CreateAccessToken(user.Email, user.ID)
+		access_token, err := utils.CreateAccessToken(user.Email, user.ID)
+		refresh_token, err := utils.CreateRefreshToken(user.ID)
+
 		if err != nil {
-			return "", err
+			return nil, err
 		}
-		return jwt_token, nil
+		return &Tokens{
+			AccessToken:  access_token,
+			RefreshToken: refresh_token,
+		}, nil
 	}
 
 	user, err := a.Register(withEmailPrefix(goth_user))
 
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	jwt_token, err := utils.CreateAccessToken(user.Email, user.ID)
+	access_token, err := utils.CreateAccessToken(user.Email, user.ID)
+	refresh_token, err := utils.CreateRefreshToken(user.ID)
 
-	return jwt_token, err
+	return &Tokens{
+		AccessToken:  access_token,
+		RefreshToken: refresh_token,
+	}, err
 }
 
-func (a *AuthServiceImpl) Callback(c *fiber.Ctx) (string, error) {
+func (a *AuthServiceImpl) Callback(c *fiber.Ctx) (*Tokens, error) {
 	provider := c.Params("provider")
 	auth_user, err := goth_fiber.CompleteUserAuth(c)
 	if err != nil {
 		log.Error(err)
-		return "", ErrCantCompleteAuth
+		return nil, ErrCantCompleteAuth
 	}
 
 	user_md, _, err := a.GetUser(auth_user)
 
 	if err == nil {
-		token, err := utils.CreateAccessToken(user_md.Email, user_md.ID)
+		access_token, err := utils.CreateAccessToken(user_md.Email, user_md.ID)
+		refresh_token, err := utils.CreateRefreshToken(user_md.ID)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
-		return token, nil
+		return &Tokens{
+			AccessToken:  access_token,
+			RefreshToken: refresh_token,
+		}, nil
 	}
 
 	log.Info(auth_user.NickName)
@@ -146,15 +165,22 @@ func (a *AuthServiceImpl) Callback(c *fiber.Ctx) (string, error) {
 	}
 
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	jwt, err := utils.CreateAccessToken(user_md.Email, user_md.ID)
+	access_token, err := utils.CreateAccessToken(user_md.Email, user_md.ID)
 	if err != nil {
-		return "", err
+		return nil, err
+	}
+	refresh_token, err := utils.CreateRefreshToken(user_md.ID)
+	if err != nil {
+		return nil, err
 	}
 
-	return jwt, nil
+	return &Tokens{
+		AccessToken:  access_token,
+		RefreshToken: refresh_token,
+	}, nil
 }
 
 func (a *AuthServiceImpl) GetUser(auth_user goth.User) (*User, *AuthIdentity, error) {
@@ -240,7 +266,21 @@ func (a *AuthServiceImpl) IsAuthenticated(token string) (*JWTClaim, error) {
 	return jwtClaim, nil
 }
 
-//verify refresh token and gives a new access token
+// renew the token, its asserted that the access token is correct since it has been verified previously inside the auth middleware
+func (a *AuthServiceImpl) Renew(user_mail string, user_id string) (*Tokens, error) {
+	access_token, err := utils.CreateAccessToken(user_mail, user_id)
+	refresh_token, err := utils.CreateRefreshToken(user_id)
+
+	if err != nil {
+		return nil, err
+	}
+	return &Tokens{
+		AccessToken:  access_token,
+		RefreshToken: refresh_token,
+	}, nil
+}
+
+//verify refresh token and gives a new access token, renew the refresh token in the mean time
 // func (a *AuthServiceImpl) RefreshAccessToken(refresh_token string) (string, error) {
 // 	claims, err := utils.VerifyJWT(refresh_token)
 //
