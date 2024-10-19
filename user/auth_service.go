@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/gistapp/api/utils"
@@ -30,9 +31,12 @@ type IAuthService interface {
 	RegisterProviders()
 	Renew(user_id string) (*Tokens, error)
 	IsAuthenticated(token string) (*JWTClaim, error)
+	CanRefresh(token string) (*JWTClaim, error)
 }
 
-type AuthServiceImpl struct{}
+type AuthServiceImpl struct {
+	user_service UserServiceImpl
+}
 
 func (a *AuthServiceImpl) Authenticate(c *fiber.Ctx) error {
 	if user, err := goth_fiber.CompleteUserAuth(c); err == nil {
@@ -266,30 +270,44 @@ func (a *AuthServiceImpl) IsAuthenticated(token string) (*JWTClaim, error) {
 	return jwtClaim, nil
 }
 
+func (a *AuthServiceImpl) CanRefresh(token string) (*JWTClaim, error) {
+	claims, err := utils.VerifyJWT(token)
+
+	if err != nil {
+		return nil, err
+	}
+
+	jwtClaim := new(JWTClaim)
+	jwtClaim.Pub = claims["pub"].(string)
+	jwtClaim.Email = "" //we don't care about email in a refresh token since it's not set
+
+	return jwtClaim, nil
+}
+
 // renew the token, its asserted that the access token is correct since it has been verified previously inside the auth middleware
-func (a *AuthServiceImpl) Renew(user_mail string, user_id string) (*Tokens, error) {
-	access_token, err := utils.CreateAccessToken(user_mail, user_id)
+func (a *AuthServiceImpl) Renew(user_id string) (*Tokens, error) {
+
+	user, err := a.user_service.GetUserByID(user_id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	access_token, err := utils.CreateAccessToken(user.Email, user_id)
 	refresh_token, err := utils.CreateRefreshToken(user_id)
 
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Println(access_token)
 	return &Tokens{
 		AccessToken:  access_token,
 		RefreshToken: refresh_token,
 	}, nil
 }
 
-//verify refresh token and gives a new access token, renew the refresh token in the mean time
-// func (a *AuthServiceImpl) RefreshAccessToken(refresh_token string) (string, error) {
-// 	claims, err := utils.VerifyJWT(refresh_token)
-//
-// 	if err != nil {
-// 		return "", err
-// 	}
-//
-// 	return utils.
-// }
-
-var AuthService AuthServiceImpl = AuthServiceImpl{}
+var AuthService AuthServiceImpl = AuthServiceImpl{
+	user_service: UserService,
+}
 var ErrCantCompleteAuth = errors.New("can't complete auth")

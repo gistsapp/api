@@ -14,7 +14,7 @@ func GetAuthToken(t *testing.T, app *fiber.App) string {
 	beginPayload := map[string]string{
 		"email": "test@test.com",
 	}
-	respBody, _ := utils.MakeRequest("POST", t, app, "/auth/local/begin", beginPayload, nil)
+	respBody, _ := utils.MakeRequest("POST", t, app, "/auth/local/begin", beginPayload, nil, []int{200})
 	token := respBody["token"]
 
 	// Verify the sign-up process
@@ -22,7 +22,7 @@ func GetAuthToken(t *testing.T, app *fiber.App) string {
 		"email": "test@test.com",
 		"token": token,
 	}
-	_, resp := utils.MakeRequest("POST", t, app, "/auth/local/verify", verifyPayload, nil)
+	_, resp := utils.MakeRequest("POST", t, app, "/auth/local/verify", verifyPayload, nil, []int{200})
 
 	auth_token := resp.Cookies()[0].Value
 	return auth_token

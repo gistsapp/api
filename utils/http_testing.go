@@ -3,13 +3,14 @@ package utils
 import (
 	"encoding/json"
 	"net/http"
+	"slices"
 	"strings"
 	"testing"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-func MakeRequest(method string, t *testing.T, app *fiber.App, url string, payload interface{}, headers map[string]string) (map[string]string, *http.Response) {
+func MakeRequest(method string, t *testing.T, app *fiber.App, url string, payload interface{}, headers map[string]string, expected_status []int) (map[string]string, *http.Response) {
 	// Marshal payload to JSON
 	jsonPayload, err := json.Marshal(payload)
 	if err != nil {
@@ -49,7 +50,7 @@ func MakeRequest(method string, t *testing.T, app *fiber.App, url string, payloa
 		t.Fatalf("Failed to decode response: %v", err)
 	}
 
-	if resp.StatusCode != 200 && resp.StatusCode != 201 {
+	if !slices.Contains(expected_status, resp.StatusCode) {
 		t.Errorf("Expected status code 200 or 201, got %d with body %v", resp.StatusCode, respBody)
 	}
 

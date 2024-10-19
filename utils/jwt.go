@@ -25,7 +25,7 @@ func CreateRefreshToken(user_id string) (string, error) {
 	payload := RefreshToken{
 		Pub: user_id,
 	}
-	return CreateToken(payload)
+	return CreateToken(payload, time.Hour*24*60) //expires after 60 days
 }
 
 func CreateAccessToken(email string, user_id string) (string, error) {
@@ -33,10 +33,10 @@ func CreateAccessToken(email string, user_id string) (string, error) {
 		Email: email,
 		Pub:   user_id,
 	}
-	return CreateToken(payload)
+	return CreateToken(payload, time.Hour)
 }
 
-func CreateToken(payload interface{}) (string, error) {
+func CreateToken(payload interface{}, expiration time.Duration) (string, error) {
 
 	t_payload := reflect.TypeOf(payload)
 	v_payload := reflect.ValueOf(payload)
@@ -56,7 +56,7 @@ func CreateToken(payload interface{}) (string, error) {
 		claims[tag_value] = fmt.Sprintf("%s", v_payload.Field(i))
 	}
 
-	claims["exp"] = time.Now().Add(time.Hour * 24).Unix()
+	claims["exp"] = time.Now().Add(expiration).Unix()
 
 	log.Info(claims)
 

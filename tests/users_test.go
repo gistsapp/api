@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/gistapp/api/server"
 	"github.com/gistapp/api/storage"
@@ -57,7 +58,7 @@ func TestRetreiveUser(t *testing.T) {
 		// Retrieve the user
 		body, _ := utils.MakeRequest("GET", t, app, "/user/me", nil, map[string]string{
 			"Authorization": "Bearer " + auth_token,
-		})
+		}, []int{200})
 
 		if body["email"] != "test@test.com" {
 			t.Fatalf("Expected email to be test@test.com")
@@ -79,5 +80,43 @@ func TestRetreiveUser(t *testing.T) {
 		log.Info(body)
 
 		DeleteAuthUser(t, auth_token)
+	})
+}
+
+func TestRefreshToken(t *testing.T) {
+	t.Run("Refresh token", func(t *testing.T) {
+		app := InitServerUsers()
+
+		if app == nil {
+			t.Fatal("Failed initialzing app")
+		}
+
+		working_token := GetAuthToken(t, app) // just create user test@test.com
+		claims, _ := utils.VerifyJWT(working_token)
+		auth_token, _ := utils.CreateToken(utils.AccessToken{
+			Pub:   claims["pub"].(string),
+			Email: claims["email"].(string),
+		}, time.Microsecond)
+		refresh_token, _ := utils.CreateRefreshToken(claims["pub"].(string))
+
+		time.Sleep(2 * time.Microsecond) //make sure that token has expired
+
+		_, _ = utils.MakeRequest("GET", t, app, "/user/me", nil, map[string]string{
+			"Authorization": "Bearer " + auth_token,
+		}, []int{401})
+
+		// now we check renewability
+
+		_, req := utils.MakeRequest("POST", t, app, "/auth/identity/renew", nil, map[string]string{
+			"Authorization": "Bearer " + auth_token,
+			"Cookie":        "gists.refresh_token=" + refresh_token,
+		}, []int{200})
+
+		set_cookies := req.Header.Values("Set-Cookie")
+
+		if len(set_cookies) != 2 {
+			t.Fatal("not two set cookies")
+		}
+
 	})
 }

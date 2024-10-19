@@ -38,6 +38,23 @@ func (a *MockAuthController) LocalAuth() fiber.Handler {
 	}
 }
 
+func (a *MockAuthController) Renew() fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		user_id := c.Locals("pub").(string)
+
+		tokens, err := a.AuthService.Renew(user_id)
+
+		if err != nil {
+			return c.Status(400).SendString(err.Error())
+		}
+
+		c.Cookie(utils.Cookie("gists.access_token", tokens.AccessToken))   //set access token
+		c.Cookie(utils.Cookie("gists.refresh_token", tokens.RefreshToken)) //set refresh token
+
+		return c.Status(200).JSON(fiber.Map{"message": "Welcome back"})
+	}
+}
+
 func (a *MockAuthController) VerifyAuthToken() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		e := new(user.AuthLocalVerificationValidator)

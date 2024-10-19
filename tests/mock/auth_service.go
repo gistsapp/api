@@ -150,5 +150,23 @@ func (a *MockAuthService) Register(options *user.RegistrationOptions) (*user.Use
 	return user_data, err
 }
 
+func (a *MockAuthService) Renew(user_id string) (*user.Tokens, error) {
+	return user.AuthService.Renew(user_id)
+}
+
 func (a *MockAuthService) RegisterProviders() {
+}
+
+func (a *MockAuthService) CanRefresh(token string) (*user.JWTClaim, error) {
+	claims, err := utils.VerifyJWT(token)
+
+	if err != nil {
+		return nil, err
+	}
+
+	jwtClaim := new(user.JWTClaim)
+	jwtClaim.Pub = claims["pub"].(string)
+	jwtClaim.Email = "" //we don't care about email in a refresh token since it's not set
+
+	return jwtClaim, nil
 }
