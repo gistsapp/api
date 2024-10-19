@@ -2,6 +2,7 @@ package mock
 
 import (
 	"github.com/gistapp/api/user"
+	"github.com/gistapp/api/utils"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -37,6 +38,23 @@ func (a *MockAuthController) LocalAuth() fiber.Handler {
 	}
 }
 
+func (a *MockAuthController) Renew() fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		user_id := c.Locals("pub").(string)
+
+		tokens, err := a.AuthService.Renew(user_id)
+
+		if err != nil {
+			return c.Status(400).SendString(err.Error())
+		}
+
+		c.Cookie(utils.Cookie("gists.access_token", tokens.AccessToken))   //set access token
+		c.Cookie(utils.Cookie("gists.refresh_token", tokens.RefreshToken)) //set refresh token
+
+		return c.Status(200).JSON(fiber.Map{"message": "Welcome back"})
+	}
+}
+
 func (a *MockAuthController) VerifyAuthToken() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		e := new(user.AuthLocalVerificationValidator)
@@ -54,11 +72,8 @@ func (a *MockAuthController) VerifyAuthToken() fiber.Handler {
 			return c.Status(400).SendString(err.Error())
 		}
 
-		token_cookie := new(fiber.Cookie)
-		token_cookie.Name = "gists.access_token"
-		token_cookie.HTTPOnly = true
-		token_cookie.Value = jwt_token
-		c.Cookie(token_cookie)
+		c.Cookie(utils.Cookie("gists.access_token", jwt_token.AccessToken))   //set access token
+		c.Cookie(utils.Cookie("gists.refresh_token", jwt_token.RefreshToken)) //set refresh token
 		return c.Status(200).JSON(fiber.Map{"message": "You are now logged in"})
 	}
 }

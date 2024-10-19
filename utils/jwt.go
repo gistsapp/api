@@ -2,20 +2,67 @@ package utils
 
 import (
 	"errors"
+	"fmt"
+	"reflect"
 	"time"
 
+	"github.com/gofiber/fiber/v2/log"
 	"github.com/golang-jwt/jwt/v5"
 )
 
 var secretKey = []byte(Get("APP_KEY"))
 
-func CreateToken(email string, user_id string) (string, error) {
+type AccessToken struct {
+	Email string `jwt:"email"`
+	Pub   string `jwt:"pub"`
+}
+
+type RefreshToken struct {
+	Pub string `jwt:"pub"`
+}
+
+func CreateRefreshToken(user_id string) (string, error) {
+	payload := RefreshToken{
+		Pub: user_id,
+	}
+	return CreateToken(payload, time.Hour*24*60) //expires after 60 days
+}
+
+func CreateAccessToken(email string, user_id string) (string, error) {
+	payload := AccessToken{
+		Email: email,
+		Pub:   user_id,
+	}
+	return CreateToken(payload, time.Hour)
+}
+
+func CreateToken(payload interface{}, expiration time.Duration) (string, error) {
+
+	t_payload := reflect.TypeOf(payload)
+	v_payload := reflect.ValueOf(payload)
+
+	claims := make(jwt.MapClaims)
+
+	for i := 0; i < t_payload.NumField(); i++ {
+		field := t_payload.Field(i)
+
+		tag_value := field.Tag.Get("jwt")
+		if tag_value == "" {
+			continue
+		}
+
+		log.Info(v_payload.Field(i))
+
+		claims[tag_value] = fmt.Sprintf("%s", v_payload.Field(i))
+	}
+
+	claims["exp"] = time.Now().Add(expiration).Unix()
+
+	log.Info(claims)
+
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256,
-		jwt.MapClaims{
-			"email": email,
-			"pub":   user_id,
-			"exp":   time.Now().Add(time.Hour * 24).Unix(),
-		})
+		claims,
+	)
 
 	tokenString, err := token.SignedString(secretKey)
 	if err != nil {
@@ -40,14 +87,14 @@ func VerifyJWT(raw_token string) (map[string]any, error) {
 		return map[string]any{}, err
 	}
 
-	var toReturn map[string]any = make(map[string]any)
+	var to_return map[string]any = make(map[string]any)
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if ok && token.Valid {
 		for key, val := range claims {
-			toReturn[key] = val
+			to_return[key] = val
 		}
-		return toReturn, nil
+		return to_return, nil
 	}
 	return map[string]any{}, ErrInvalidToken
 }

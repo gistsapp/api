@@ -60,7 +60,7 @@ func TestCreateGists(t *testing.T) {
 			"content": "Test content",
 		}, map[string]string{
 			"Authorization": fmt.Sprintf("Bearer %s", auth_token),
-		})
+		}, []int{201})
 
 		if req.StatusCode != 201 {
 			t.Fatalf("Expected status code 201, got %d", req.StatusCode)
@@ -95,7 +95,7 @@ func TestCreateGists(t *testing.T) {
 
 		body, req := utils.MakeRequest("POST", t, app, "/gists", payload, map[string]string{
 			"Authorization": fmt.Sprintf("Bearer %s", auth_token),
-		})
+		}, []int{201})
 
 		if req.StatusCode != 201 {
 			t.Fatalf("Expected status code 201, got %d", req.StatusCode)

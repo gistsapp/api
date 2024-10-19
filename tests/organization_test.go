@@ -69,7 +69,7 @@ func TestCreateOrganization(t *testing.T) {
 		//
 		body, _ := utils.MakeRequest("POST", t, app, "/orgs", org_payload, map[string]string{
 			"Authorization": "Bearer " + auth_token,
-		})
+		}, []int{201})
 		//
 		if body["name"] != "Test Organization" {
 			t.Errorf("Expected organization name to be 'Test Organization', got %s", body["name"])
@@ -117,13 +117,13 @@ func TestDeleteOrganization(t *testing.T) {
 
 		body, _ := utils.MakeRequest("POST", t, app, "/orgs", org_payload, map[string]string{
 			"Authorization": "Bearer " + auth_token,
-		}) //before previous test tests the creation, we should be pretty sure that the creation works
+		}, []int{201}) //before previous test tests the creation, we should be pretty sure that the creation works
 
 		id, _ := strconv.ParseInt(body["id"], 10, 32)
 
 		body, _ = utils.MakeRequest("DELETE", t, app, fmt.Sprintf("/orgs/%d", id), nil, map[string]string{
 			"Authorization": "Bearer " + auth_token,
-		})
+		}, []int{200})
 
 		org_dto := organizations.OrganizationSQL{
 			ID: sql.NullInt32{
