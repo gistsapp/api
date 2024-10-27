@@ -1,6 +1,8 @@
 package server
 
 import (
+	"fmt"
+
 	"github.com/MarceloPetrucio/go-scalar-api-reference"
 	"github.com/gistapp/api/utils"
 	"github.com/gofiber/fiber/v2"
@@ -44,6 +46,8 @@ func (s *Server) Setup(routers ...DomainRouter) {
 		return c.Format(htmlContent)
 	})
 
+	log.Info("Setting up server allowing origin : ", utils.Get("FRONTEND_URL"))
+	fmt.Printf("Setting up server allowing origin : %v \n", utils.Get("FRONTEND_URL"))
 	s.App.Use(cors.New(cors.Config{
 		AllowCredentials: true,
 		AllowOrigins:     utils.Get("FRONTEND_URL"),

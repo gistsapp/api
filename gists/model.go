@@ -3,9 +3,10 @@ package gists
 import (
 	"database/sql"
 	"errors"
-	"strconv"
 
 	"github.com/gistapp/api/storage"
+	"github.com/gistapp/api/utils"
+	"github.com/gistsapp/pogo/pogo"
 	"github.com/gofiber/fiber/v2/log"
 )
 
@@ -18,11 +19,11 @@ type GistSQL struct {
 }
 
 type Gist struct {
-	ID      string  `json:"id"`
-	Name    string  `json:"name"`
-	Content string  `json:"content"`
-	OwnerID string  `json:"owner_id"`
-	OrgID   *string `json:"org_id,omitempty"`
+	ID      string  `json:"id" pogo:"gist_id"`
+	Name    string  `json:"name" pogo:"name"`
+	Content string  `json:"content" pogo:"content"`
+	OwnerID string  `json:"owner_id" pogo:"owner"`
+	OrgID   *string `json:"org_id,omitempty" pogo:"org_id"`
 }
 
 type GistModel interface {
@@ -111,48 +112,67 @@ func (g *GistSQL) Delete(id string) error {
 }
 
 func (g *GistSQL) FindByID(id string) (*Gist, error) {
-	row, err := storage.Database.Query("SELECT gist_id, name, content, owner, org_id FROM gists WHERE gist_id = $1 AND owner = $2", id, g.OwnerID.String)
-	if err != nil {
-		log.Error(err)
-		return nil, errors.New("couldn't find gist")
+	// row, err := storage.Database.Query("SELECT gist_id, name, content, owner, org_id FROM gists WHERE gist_id = $1 AND owner = $2", id, g.OwnerID.String)
+	// if err != nil {
+	// 	log.Error(err)
+	// 	return nil, errors.New("couldn't find gist")
+	// }
+	// row.Next()
+	// var gist Gist
+	// err = row.Scan(&gist.ID, &gist.Name, &gist.Content, &gist.OwnerID, &gist.OrgID)
+	// if err != nil {
+	// 	log.Error(err)
+	// 	return nil, errors.New("couldn't find gist")
+	// }
+	// return &gist, nil
+
+	db := pogo.NewDatabase(utils.Get("PG_USER"), utils.Get("PG_PASSWORD"), utils.Get("PG_HOST"), utils.Get("PG_PORT"), utils.Get("PG_DATABASE"))
+
+	gists := make([]Gist, 0)
+	err := pogo.SuperQuery(db, "SELECT :fields FROM gists WHERE gist_id = $1 AND owner = $2", &gists, id, g.OwnerID.String)
+	if len(gists) <= 0 {
+		return nil, errors.New("gist not found")
 	}
-	row.Next()
-	var gist Gist
-	err = row.Scan(&gist.ID, &gist.Name, &gist.Content, &gist.OwnerID, &gist.OrgID)
-	if err != nil {
-		log.Error(err)
-		return nil, errors.New("couldn't find gist")
-	}
-	return &gist, nil
+	return &gists[0], err
 }
 
 func (g *GistSQL) FindAll() ([]Gist, error) {
-	rows, err := storage.Database.Query("SELECT gist_id, name, content, owner, org_id FROM gists WHERE owner = $1", g.OwnerID.String)
-	if err != nil {
-		log.Error(err)
-		return nil, errors.New("couldn't find gists")
+	// rows, err := storage.Database.Query("SELECT gist_id, name, content, owner, org_id FROM gists WHERE owner = $1", g.OwnerID.String)
+	// if err != nil {
+	// 	log.Error(err)
+	// 	return nil, errors.New("couldn't find gists")
+	// }
+	// var gists []Gist
+	// for rows.Next() {
+	// 	var gist GistSQL
+	// 	err = rows.Scan(&gist.ID, &gist.Name, &gist.Content, &gist.OwnerID, &gist.OrgID)
+	// 	if err != nil {
+	// 		log.Error(err)
+	// 		return nil, errors.New("couldn't find gists")
+	// 	}
+	// 	gists = append(gists, Gist{
+	// 		ID:      strconv.Itoa(int(gist.ID.Int32)),
+	// 		Name:    gist.Name.String,
+	// 		Content: gist.Content.String,
+	// 		OwnerID: gist.OwnerID.String,
+	// 		OrgID: func() *string {
+	// 			if gist.OrgID.Valid {
+	// 				orgID := strconv.Itoa(int(gist.OrgID.Int32))
+	// 				return &orgID
+	// 			}
+	// 			return nil
+	// 		}(),
+	// 	})
+	// }
+	// return gists, nil
+
+	db := pogo.NewDatabase(utils.Get("PG_USER"), utils.Get("PG_PASSWORD"), utils.Get("PG_HOST"), utils.Get("PG_PORT"), utils.Get("PG_DATABASE"))
+
+	gists := make([]Gist, 0)
+	err := pogo.SuperQuery(db, "SELECT :fields FROM gists WHERE owner = $1", &gists, g.OwnerID.String)
+	if len(gists) <= 0 {
+		return nil, errors.New("gist not found")
 	}
-	var gists []Gist
-	for rows.Next() {
-		var gist GistSQL
-		err = rows.Scan(&gist.ID, &gist.Name, &gist.Content, &gist.OwnerID, &gist.OrgID)
-		if err != nil {
-			log.Error(err)
-			return nil, errors.New("couldn't find gists")
-		}
-		gists = append(gists, Gist{
-			ID:      strconv.Itoa(int(gist.ID.Int32)),
-			Name:    gist.Name.String,
-			Content: gist.Content.String,
-			OwnerID: gist.OwnerID.String,
-			OrgID: func() *string {
-				if gist.OrgID.Valid {
-					orgID := strconv.Itoa(int(gist.OrgID.Int32))
-					return &orgID
-				}
-				return nil
-			}(),
-		})
-	}
-	return gists, nil
+	return gists, err
+
 }
