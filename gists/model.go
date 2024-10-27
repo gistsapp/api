@@ -11,19 +11,23 @@ import (
 )
 
 type GistSQL struct {
-	ID      sql.NullInt32
-	Name    sql.NullString
-	Content sql.NullString
-	OwnerID sql.NullString
-	OrgID   sql.NullInt32
+	ID          sql.NullInt32
+	Name        sql.NullString
+	Content     sql.NullString
+	OwnerID     sql.NullString
+	OrgID       sql.NullInt32
+	Description sql.NullString
+	Language    sql.NullString
 }
 
 type Gist struct {
-	ID      string  `json:"id" pogo:"gist_id"`
-	Name    string  `json:"name" pogo:"name"`
-	Content string  `json:"content" pogo:"content"`
-	OwnerID string  `json:"owner_id" pogo:"owner"`
-	OrgID   *string `json:"org_id,omitempty" pogo:"org_id"`
+	ID          string  `json:"id" pogo:"gist_id"`
+	Name        string  `json:"name" pogo:"name"`
+	Content     string  `json:"content" pogo:"content"`
+	OwnerID     string  `json:"owner_id" pogo:"owner"`
+	OrgID       *string `json:"org_id,omitempty" pogo:"org_id"`
+	Description string  `json:"description" pogo:"description"`
+	Language    string  `json:"language" pogo:"language"`
 }
 
 type GistModel interface {
@@ -31,75 +35,42 @@ type GistModel interface {
 }
 
 func (g *GistSQL) Save() (*Gist, error) {
-	var row *sql.Rows
-	var err error
+	db := pogo.NewDatabase(utils.Get("PG_USER"), utils.Get("PG_PASSWORD"), utils.Get("PG_HOST"), utils.Get("PG_PORT"), utils.Get("PG_DATABASE"))
+	gists := make([]Gist, 0)
+	err := pogo.SuperQuery(db, "INSERT INTO gists(name, content, owner, org_id, language, description) VALUES ($1, $2, $3, $4, $5, $6) RETURNING :fields", &gists, g.Name.String, g.Content.String, g.OwnerID.String, g.OrgID, g.Language, g.Description)
 
-	if g.OrgID.Valid {
-		row, err = storage.Database.Query("INSERT INTO gists(name, content, owner, org_id) VALUES ($1, $2, $3, $4) RETURNING gist_id, name, content, owner, org_id", g.Name.String, g.Content.String, g.OwnerID.String, g.OrgID.Int32)
-	} else {
-		row, err = storage.Database.Query("INSERT INTO gists(name, content, owner) VALUES ($1, $2, $3) RETURNING gist_id, name, content, owner", g.Name.String, g.Content.String, g.OwnerID.String)
-	}
-
-	if err != nil {
-		log.Error(err)
+	log.Error(err)
+	if len(gists) <= 0 {
 		return nil, errors.New("couldn't create gist")
 	}
-
-	var gist Gist
-
-	row.Next()
-	if g.OrgID.Valid {
-		err = row.Scan(&gist.ID, &gist.Name, &gist.Content, &gist.OwnerID, &gist.OrgID)
-	} else {
-		err = row.Scan(&gist.ID, &gist.Name, &gist.Content, &gist.OwnerID)
-		gist.OrgID = nil
-	}
-	if err != nil {
-		log.Error(err)
-		return nil, errors.New("couldn't find gist")
-	}
-	return &gist, nil
+	return &gists[0], err
 }
 
 func (g *GistSQL) UpdateName(id string) (*Gist, error) {
-	row, err := storage.Database.Query("UPDATE gists SET name = $1 WHERE gist_id = $2 AND owner = $3 RETURNING gist_id, name, content, owner", g.Name.String, id, g.OwnerID.String)
-	if err != nil {
-		log.Error(err)
-		return nil, errors.New("couldn't update name")
-	}
-
-	var gist Gist
-
-	row.Next()
-
-	err = row.Scan(&gist.ID, &gist.Name, &gist.Content, &gist.OwnerID)
-
-	if err != nil {
-		log.Error(err)
-		return nil, errors.New("couldn't scan gist")
-	}
-
-	return &gist, nil
+	return g.UpdateField(id, "name", g.Name.String)
 }
 
 func (g *GistSQL) UpdateContent(id string) (*Gist, error) {
-	row, err := storage.Database.Query("UPDATE gists SET content = $1 WHERE gist_id = $2 AND owner = $3 RETURNING gist_id, name, content, owner", g.Content.String, id, g.OwnerID.String)
-	if err != nil {
-		log.Error(err)
-		return nil, errors.New("couldn't update content")
+	db := pogo.NewDatabase(utils.Get("PG_USER"), utils.Get("PG_PASSWORD"), utils.Get("PG_HOST"), utils.Get("PG_PORT"), utils.Get("PG_DATABASE"))
+
+	gists := make([]Gist, 0)
+	err := pogo.SuperQuery(db, "UPDATE gists SET content = $1 WHERE gist_id = $2 AND owner = $3 RETURNING :fields", &gists, g.Content.String, id, g.OwnerID.String)
+
+	if len(gists) <= 0 {
+		return nil, errors.New("gist not found")
 	}
 
-	var gist Gist
+	return &gists[0], err
+}
 
-	row.Next()
-
-	err = row.Scan(&gist.ID, &gist.Name, &gist.Content, &gist.OwnerID)
-	if err != nil {
-		log.Error(err)
-		return nil, errors.New("couldn't scan gist")
+func (g *GistSQL) UpdateField(id string, field string, val string) (*Gist, error) {
+	db := pogo.NewDatabase(utils.Get("PG_USER"), utils.Get("PG_PASSWORD"), utils.Get("PG_HOST"), utils.Get("PG_PORT"), utils.Get("PG_DATABASE"))
+	gists := make([]Gist, 0)
+	err := pogo.SuperQuery(db, "UPDATE gists SET "+field+" = $1 WHERE gist_id = $2 AND owner = $3 RETURNING :fields", &gists, val, id, g.OwnerID.String)
+	if len(gists) <= 0 {
+		return nil, errors.New("gist not found")
 	}
-
-	return &gist, nil
+	return &gists[0], err
 }
 
 func (g *GistSQL) Delete(id string) error {
@@ -112,67 +83,25 @@ func (g *GistSQL) Delete(id string) error {
 }
 
 func (g *GistSQL) FindByID(id string) (*Gist, error) {
-	// row, err := storage.Database.Query("SELECT gist_id, name, content, owner, org_id FROM gists WHERE gist_id = $1 AND owner = $2", id, g.OwnerID.String)
-	// if err != nil {
-	// 	log.Error(err)
-	// 	return nil, errors.New("couldn't find gist")
-	// }
-	// row.Next()
-	// var gist Gist
-	// err = row.Scan(&gist.ID, &gist.Name, &gist.Content, &gist.OwnerID, &gist.OrgID)
-	// if err != nil {
-	// 	log.Error(err)
-	// 	return nil, errors.New("couldn't find gist")
-	// }
-	// return &gist, nil
-
 	db := pogo.NewDatabase(utils.Get("PG_USER"), utils.Get("PG_PASSWORD"), utils.Get("PG_HOST"), utils.Get("PG_PORT"), utils.Get("PG_DATABASE"))
 
 	gists := make([]Gist, 0)
 	err := pogo.SuperQuery(db, "SELECT :fields FROM gists WHERE gist_id = $1 AND owner = $2", &gists, id, g.OwnerID.String)
 	if len(gists) <= 0 {
+		log.Error(err)
 		return nil, errors.New("gist not found")
 	}
 	return &gists[0], err
 }
 
 func (g *GistSQL) FindAll() ([]Gist, error) {
-	// rows, err := storage.Database.Query("SELECT gist_id, name, content, owner, org_id FROM gists WHERE owner = $1", g.OwnerID.String)
-	// if err != nil {
-	// 	log.Error(err)
-	// 	return nil, errors.New("couldn't find gists")
-	// }
-	// var gists []Gist
-	// for rows.Next() {
-	// 	var gist GistSQL
-	// 	err = rows.Scan(&gist.ID, &gist.Name, &gist.Content, &gist.OwnerID, &gist.OrgID)
-	// 	if err != nil {
-	// 		log.Error(err)
-	// 		return nil, errors.New("couldn't find gists")
-	// 	}
-	// 	gists = append(gists, Gist{
-	// 		ID:      strconv.Itoa(int(gist.ID.Int32)),
-	// 		Name:    gist.Name.String,
-	// 		Content: gist.Content.String,
-	// 		OwnerID: gist.OwnerID.String,
-	// 		OrgID: func() *string {
-	// 			if gist.OrgID.Valid {
-	// 				orgID := strconv.Itoa(int(gist.OrgID.Int32))
-	// 				return &orgID
-	// 			}
-	// 			return nil
-	// 		}(),
-	// 	})
-	// }
-	// return gists, nil
-
 	db := pogo.NewDatabase(utils.Get("PG_USER"), utils.Get("PG_PASSWORD"), utils.Get("PG_HOST"), utils.Get("PG_PORT"), utils.Get("PG_DATABASE"))
 
 	gists := make([]Gist, 0)
 	err := pogo.SuperQuery(db, "SELECT :fields FROM gists WHERE owner = $1", &gists, g.OwnerID.String)
 	if len(gists) <= 0 {
+		log.Error(err)
 		return nil, errors.New("gist not found")
 	}
 	return gists, err
-
 }

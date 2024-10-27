@@ -5,9 +5,11 @@ import "github.com/gofiber/fiber/v2"
 type GistControllerImpl struct{}
 
 type GistSaveValidator struct {
-	Name    string `json:"name"`
-	Content string `json:"content"`
-	OrgID   string `json:"org_id,omitempty"`
+	Name        string `json:"name"`
+	Content     string `json:"content"`
+	OrgID       string `json:"org_id,omitempty"`
+	Language    string `json:"language,omitempty"`
+	Description string `json:"description,omitempty"`
 }
 
 func (g *GistControllerImpl) Save() fiber.Handler {
@@ -18,7 +20,7 @@ func (g *GistControllerImpl) Save() fiber.Handler {
 		if err := c.BodyParser(g); err != nil {
 			return c.Status(400).SendString("Request must be valid JSON with fields name and content as text")
 		}
-		gist, err := GistService.Save(g.Name, g.Content, owner_id, g.OrgID)
+		gist, err := GistService.Save(g.Name, g.Content, owner_id, g.OrgID, g.Language, g.Description)
 		if err != nil {
 			return c.Status(500).SendString(err.Error())
 		}
