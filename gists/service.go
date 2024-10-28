@@ -10,58 +10,54 @@ import (
 
 type GistServiceImpl struct{}
 
-func (g *GistServiceImpl) Save(name string, content string, owner_id string, org_id string) (*Gist, error) {
-	var m GistSQL
-
-	if org_id != "" {
-		org_id_int, err := strconv.Atoi(org_id)
-
-		if err != nil {
-			return nil, errors.New("org_id must be an integer")
-		}
-		m = GistSQL{
-			ID: sql.NullInt32{
-				Valid: false,
-				Int32: 0,
-			},
-			Name: sql.NullString{
-				String: name,
-				Valid:  true,
-			},
-			Content: sql.NullString{
-				String: content,
-				Valid:  true,
-			},
-			OwnerID: sql.NullString{
-				String: owner_id,
-				Valid:  true,
-			},
-			OrgID: sql.NullInt32{
-				Int32: int32(org_id_int),
-				Valid: true,
-			},
-		}
-	} else {
-		m = GistSQL{
-			ID: sql.NullInt32{
-				Valid: false,
-				Int32: 0,
-			},
-			Name: sql.NullString{
-				String: name,
-				Valid:  true,
-			},
-			Content: sql.NullString{
-				String: content,
-				Valid:  true,
-			},
-			OwnerID: sql.NullString{
-				String: owner_id,
-				Valid:  true,
-			},
+func (g *GistServiceImpl) Save(name string, content string, ownerID string, orgID string, language string, description string) (*Gist, error) {
+	// Helper function to set NullString type based on value
+	toNullString := func(s string) sql.NullString {
+		return sql.NullString{
+			String: s,
+			Valid:  true,
 		}
 	}
 
+	// Helper function to set NullInt32 type based on value
+	toNullInt32 := func(s string) (sql.NullInt32, error) {
+		if s == "" {
+			return sql.NullInt32{Valid: false}, nil
+		}
+		intValue, err := strconv.Atoi(s)
+		if err != nil {
+			return sql.NullInt32{}, errors.New("org_id must be an integer")
+		}
+		return sql.NullInt32{
+			Int32: int32(intValue),
+			Valid: true,
+		}, nil
+	}
+
+	// Set values for GistSQL fields
+	orgIDNullInt32, err := toNullInt32(orgID)
+	if err != nil {
+		return nil, err
+	}
+
+	if language == "" {
+		language = "text"
+	}
+
+	m := GistSQL{
+		ID: sql.NullInt32{
+			Valid: false, // Assuming ID is auto-generated and not required here
+			Int32: 0,
+		},
+		Name:        toNullString(name),
+		Content:     toNullString(content),
+		OwnerID:     toNullString(ownerID),
+		Language:    toNullString(language),
+		Description: toNullString(description),
+		OrgID:       orgIDNullInt32,
+	}
+
+	// Save and handle errors
 	gist, err := m.Save()
 	if err != nil {
 		return nil, errors.New("couldn't insert into database gists")
@@ -135,6 +131,70 @@ func (g *GistServiceImpl) UpdateContent(id string, content string, owner_id stri
 		return nil, errors.New("couldn't update content in database gists")
 	}
 	return gist, nil
+}
+
+func (g *GistServiceImpl) UpdateDescription(id string, description string, owner_id string) (*Gist, error) {
+	err := gistExists(id, owner_id)
+	if err != nil {
+		return nil, err
+	}
+	m := GistSQL{
+		ID: sql.NullInt32{
+			Valid: true,
+			Int32: 0,
+		},
+		Name: sql.NullString{
+			String: "",
+			Valid:  false,
+		},
+		Content: sql.NullString{
+			String: "",
+			Valid:  false,
+		},
+		Description: sql.NullString{
+			String: description,
+			Valid:  true,
+		},
+		OwnerID: sql.NullString{
+			String: owner_id,
+			Valid:  true,
+		},
+	}
+	gist, err := m.UpdateField(id, "description", description)
+	if err != nil {
+		return nil, errors.New("couldn't update description in database gists")
+	}
+	return gist, nil
+}
+
+func (g *GistServiceImpl) UpdateLanguage(id string, language string, owner_id string) (*Gist, error) {
+	err := gistExists(id, owner_id)
+	if err != nil {
+		return nil, err
+	}
+	m := GistSQL{
+		ID: sql.NullInt32{
+			Valid: true,
+			Int32: 0,
+		},
+		Name: sql.NullString{
+			String: "",
+			Valid:  false,
+		},
+		Content: sql.NullString{
+			String: "",
+			Valid:  false,
+		},
+		Language: sql.NullString{
+			String: language,
+			Valid:  true,
+		},
+		OwnerID: sql.NullString{
+			String: owner_id,
+			Valid:  true,
+		},
+	}
+	return m.UpdateField(id, "language", language)
 }
 
 func (g *GistServiceImpl) Delete(id string, owner_id string) error {
