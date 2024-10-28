@@ -133,6 +133,70 @@ func (g *GistServiceImpl) UpdateContent(id string, content string, owner_id stri
 	return gist, nil
 }
 
+func (g *GistServiceImpl) UpdateDescription(id string, description string, owner_id string) (*Gist, error) {
+	err := gistExists(id, owner_id)
+	if err != nil {
+		return nil, err
+	}
+	m := GistSQL{
+		ID: sql.NullInt32{
+			Valid: true,
+			Int32: 0,
+		},
+		Name: sql.NullString{
+			String: "",
+			Valid:  false,
+		},
+		Content: sql.NullString{
+			String: "",
+			Valid:  false,
+		},
+		Description: sql.NullString{
+			String: description,
+			Valid:  true,
+		},
+		OwnerID: sql.NullString{
+			String: owner_id,
+			Valid:  true,
+		},
+	}
+	gist, err := m.UpdateField(id, "description", description)
+	if err != nil {
+		return nil, errors.New("couldn't update description in database gists")
+	}
+	return gist, nil
+}
+
+func (g *GistServiceImpl) UpdateLanguage(id string, language string, owner_id string) (*Gist, error) {
+	err := gistExists(id, owner_id)
+	if err != nil {
+		return nil, err
+	}
+	m := GistSQL{
+		ID: sql.NullInt32{
+			Valid: true,
+			Int32: 0,
+		},
+		Name: sql.NullString{
+			String: "",
+			Valid:  false,
+		},
+		Content: sql.NullString{
+			String: "",
+			Valid:  false,
+		},
+		Language: sql.NullString{
+			String: language,
+			Valid:  true,
+		},
+		OwnerID: sql.NullString{
+			String: owner_id,
+			Valid:  true,
+		},
+	}
+	return m.UpdateField(id, "language", language)
+}
+
 func (g *GistServiceImpl) Delete(id string, owner_id string) error {
 	err := gistExists(id, owner_id)
 
