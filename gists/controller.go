@@ -1,6 +1,9 @@
 package gists
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/log"
+)
 
 type GistControllerImpl struct{}
 
@@ -63,9 +66,16 @@ func (g *GistControllerImpl) FindAll() fiber.Handler {
 func (g *GistControllerImpl) FindByID() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		owner_id := c.Locals("pub").(string)
+
 		gist, err := GistService.FindByID(c.Params("id"), owner_id)
 		if err != nil {
 			return c.Status(404).SendString(err.Error())
+		}
+
+		raw_params := c.Queries()["raw"]
+		log.Info(raw_params)
+		if raw_params == "true" {
+			return c.Status(200).SendString(gist.Content)
 		}
 		return c.JSON(gist)
 	}
