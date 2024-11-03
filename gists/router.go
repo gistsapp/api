@@ -19,5 +19,6 @@ func (r *GistRouter) SubscribeRoutes(app *fiber.Router) {
 	gists_router.Patch("/:id/description", r.Controller.UpdateDescription())
 	gists_router.Get("/", r.Controller.FindAll())
 	gists_router.Get("/:id", r.Controller.FindByID())
+	gists_router.Get("/raw/:id", r.Controller.RawFindByID())
 	gists_router.Delete("/:id", r.Controller.Delete())
 }
