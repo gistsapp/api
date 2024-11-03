@@ -3,8 +3,6 @@ package organizations
 import (
 	"database/sql"
 	"errors"
-	"fmt"
-	"strconv"
 
 	"github.com/gofiber/fiber/v2/log"
 )
@@ -13,9 +11,9 @@ type OrganizationServiceImpl struct{}
 
 func (g *OrganizationServiceImpl) Save(name string, owner_id string) (*Organization, error) {
 	m := OrganizationSQL{
-		ID: sql.NullInt32{
-			Valid: false,
-			Int32: 0,
+		ID: sql.NullString{
+			Valid:  false,
+			String: "",
 		}, // useless ID
 		Name: sql.NullString{
 			String: name,
@@ -32,15 +30,15 @@ func (g *OrganizationServiceImpl) Save(name string, owner_id string) (*Organizat
 	return organization, nil
 }
 
-func (g *OrganizationServiceImpl) IsOwner(org_id int, user_id int) bool {
+func (g *OrganizationServiceImpl) IsOwner(org_id string, user_id string) bool {
 	member_sql := MemberSQL{
-		OrgID: sql.NullInt32{
-			Int32: int32(org_id),
-			Valid: true,
+		OrgID: sql.NullString{
+			String: org_id,
+			Valid:  true,
 		},
-		UserID: sql.NullInt32{
-			Int32: int32(user_id),
-			Valid: true,
+		UserID: sql.NullString{
+			String: user_id,
+			Valid:  true,
 		},
 	}
 
@@ -55,9 +53,9 @@ func (g *OrganizationServiceImpl) IsOwner(org_id int, user_id int) bool {
 // returns a list of organizations that the user is a member of
 func (g *OrganizationServiceImpl) GetAsMember(user_id string) ([]Organization, error) {
 	m := OrganizationSQL{
-		ID: sql.NullInt32{
-			Valid: false,
-			Int32: 0,
+		ID: sql.NullString{
+			Valid:  false,
+			String: "",
 		},
 		Name: sql.NullString{
 			String: "",
@@ -73,9 +71,9 @@ func (g *OrganizationServiceImpl) GetAsMember(user_id string) ([]Organization, e
 
 func (g *OrganizationServiceImpl) GetByID(org_id string, user_id string) (*Organization, error) {
 	m := OrganizationSQL{
-		ID: sql.NullInt32{
-			Valid: true,
-			Int32: 0,
+		ID: sql.NullString{
+			Valid:  true,
+			String: "",
 		},
 		Name: sql.NullString{
 			String: "",
@@ -90,36 +88,25 @@ func (g *OrganizationServiceImpl) GetByID(org_id string, user_id string) (*Organ
 }
 
 func (g *OrganizationServiceImpl) Delete(org_id string, user_id string) error {
-	i_org_id, err := strconv.Atoi(org_id)
 
-	if err != nil {
-		return errors.New("organization ID must be an integer")
-	}
-
-	i_user_id, err := strconv.Atoi(user_id)
-
-	if err != nil {
-		return errors.New("user ID must be an integer")
-	}
-
-	if !g.IsOwner(i_org_id, i_user_id) {
+	if !g.IsOwner(org_id, user_id) {
 		return errors.New("user is not the owner of the organization")
 	}
 
 	m := OrganizationSQL{
-		ID: sql.NullInt32{
-			Valid: true,
-			Int32: int32(i_org_id),
+		ID: sql.NullString{
+			Valid:  true,
+			String: org_id,
 		},
 		Name: sql.NullString{
 			String: "",
 			Valid:  false,
 		},
 	}
-	fmt.Printf("org_id: %d\n", i_org_id)
-	err = m.Delete()
+	log.Info("org_id: %s\n", org_id)
+	err := m.Delete()
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err)
 		return errors.New("couldn't delete organization")
 	}
 	return nil

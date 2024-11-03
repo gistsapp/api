@@ -15,7 +15,7 @@ const (
 )
 
 type OrganizationSQL struct {
-	ID   sql.NullInt32
+	ID   sql.NullString
 	Name sql.NullString
 }
 
@@ -56,7 +56,7 @@ func (o *OrganizationSQL) Save(owner_id string) (*Organization, error) {
 }
 
 func (o *OrganizationSQL) Delete() error {
-	_, err := storage.Database.Exec("DELETE FROM organization WHERE org_id = $1", o.ID.Int32)
+	_, err := storage.Database.Exec("DELETE FROM organization WHERE org_id = $1", o.ID.String)
 	if err != nil {
 		log.Error(err)
 		return errors.New("couldn't delete organization")
@@ -133,7 +133,7 @@ func (o *OrganizationSQL) GetByID(user_id string, org_id string) (*Organization,
 func (o *OrganizationSQL) Get() (*Organization, error) {
 	query := "SELECT org_id, name FROM organization WHERE org_id = $1"
 
-	row, err := storage.Database.Query(query, o.ID.Int32)
+	row, err := storage.Database.Query(query, o.ID.String)
 
 	if err != nil {
 		return nil, errors.New("couldn't find organization")

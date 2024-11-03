@@ -9,7 +9,7 @@ import (
 )
 
 type AuthIdentitySQL struct {
-	ID         sql.NullInt32
+	ID         sql.NullString
 	Data       sql.NullString
 	Type       sql.NullString
 	ProviderID sql.NullString
@@ -33,7 +33,6 @@ type AuthIdentityAndUser struct {
 	AuthIdentity AuthIdentity
 	User         User
 }
-
 type AuthIdentityModel interface {
 	Save() (*AuthIdentity, error)
 }
