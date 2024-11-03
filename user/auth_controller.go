@@ -104,8 +104,8 @@ func (a *AuthControllerImpl) Renew() fiber.Handler {
 
 func (a *AuthControllerImpl) Logout() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		c.ClearCookie("gists.access_token")
-		c.ClearCookie("gists.refresh_token")
+		c.Cookie(utils.ClearCookie("gists.access_token"))
+		c.Cookie(utils.ClearCookie("gists.refresh_token"))
 		return c.Status(200).JSON(fiber.Map{"message": "You are now logged out"})
 	}
 }
