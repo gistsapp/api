@@ -81,6 +81,19 @@ func (g *GistControllerImpl) FindByID() fiber.Handler {
 	}
 }
 
+func (g *GistControllerImpl) RawFindByID() fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		owner_id := c.Locals("pub").(string)
+
+		gist, err := GistService.FindByID(c.Params("id"), owner_id)
+		if err != nil {
+			return c.Status(404).SendString(err.Error())
+		}
+
+		return c.Status(200).SendString(gist.Content)
+	}
+}
+
 func (g *GistControllerImpl) UpdateContent() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		g := new(GistSaveValidator)
