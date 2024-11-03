@@ -11,11 +11,11 @@ import (
 )
 
 type GistSQL struct {
-	ID          sql.NullInt32
+	ID          sql.NullString
 	Name        sql.NullString
 	Content     sql.NullString
 	OwnerID     sql.NullString
-	OrgID       sql.NullInt32
+	OrgID       sql.NullString
 	Description sql.NullString
 	Language    sql.NullString
 }

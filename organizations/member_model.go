@@ -8,21 +8,21 @@ import (
 )
 
 type MemberSQL struct {
-	MemberID sql.NullInt32
-	OrgID    sql.NullInt32
-	UserID   sql.NullInt32
+	MemberID sql.NullString
+	OrgID    sql.NullString
+	UserID   sql.NullString
 	Role     sql.NullString
 }
 
 type Member struct {
-	MemberID int  `json:"member_id"`
-	OrgID    int  `json:"org_id"`
-	UserID   int  `json:"user_id"`
-	Role     Role `json:"role"`
+	MemberID string `json:"member_id"`
+	OrgID    string `json:"org_id"`
+	UserID   string `json:"user_id"`
+	Role     Role   `json:"role"`
 }
 
 func (m *MemberSQL) Get() (*Member, error) {
-	row, err := storage.Database.Query("SELECT member_id, org_id, user_id, role FROM member WHERE org_id = $1 AND user_id = $2", m.OrgID.Int32, m.UserID.Int32)
+	row, err := storage.Database.Query("SELECT member_id, org_id, user_id, role FROM member WHERE org_id = $1 AND user_id = $2", m.OrgID.String, m.UserID.String)
 	if err != nil {
 		log.Error(err)
 		return nil, err

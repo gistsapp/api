@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
-	"strconv"
 	"testing"
 
 	"github.com/gistapp/api/gists"
@@ -83,19 +82,14 @@ func TestCreateOrganization(t *testing.T) {
 }
 
 func DeleteOrganization(t *testing.T, org_id string) {
-	id, err := strconv.ParseInt(org_id, 10, 32)
-
-	if err != nil {
-		t.Errorf("Failed to parse organization ID: %v", err)
-	}
 
 	org := organizations.OrganizationSQL{
-		ID: sql.NullInt32{
-			Int32: int32(id),
-			Valid: true,
+		ID: sql.NullString{
+			String: org_id,
+			Valid:  true,
 		},
 	}
-	if err = org.Delete(); err != nil {
+	if err := org.Delete(); err != nil {
 		t.Errorf("Failed to delete organization: %v", err)
 		return
 	}
@@ -119,16 +113,16 @@ func TestDeleteOrganization(t *testing.T) {
 			"Authorization": "Bearer " + auth_token,
 		}, []int{201}) //before previous test tests the creation, we should be pretty sure that the creation works
 
-		id, _ := strconv.ParseInt(body["id"], 10, 32)
+		id := body["id"]
 
-		body, _ = utils.MakeRequest("DELETE", t, app, fmt.Sprintf("/orgs/%d", id), nil, map[string]string{
+		body, _ = utils.MakeRequest("DELETE", t, app, fmt.Sprintf("/orgs/%s", id), nil, map[string]string{
 			"Authorization": "Bearer " + auth_token,
 		}, []int{200})
 
 		org_dto := organizations.OrganizationSQL{
-			ID: sql.NullInt32{
-				Int32: int32(id),
-				Valid: true,
+			ID: sql.NullString{
+				String: id,
+				Valid:  true,
 			},
 		}
 

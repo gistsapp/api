@@ -3,7 +3,6 @@ package gists
 import (
 	"database/sql"
 	"errors"
-	"strconv"
 
 	"github.com/gofiber/fiber/v2/log"
 )
@@ -19,25 +18,17 @@ func (g *GistServiceImpl) Save(name string, content string, ownerID string, orgI
 		}
 	}
 
-	// Helper function to set NullInt32 type based on value
-	toNullInt32 := func(s string) (sql.NullInt32, error) {
+	toReallyNullString := func(s string) sql.NullString {
 		if s == "" {
-			return sql.NullInt32{Valid: false}, nil
+			return sql.NullString{
+				String: "",
+				Valid:  false,
+			}
 		}
-		intValue, err := strconv.Atoi(s)
-		if err != nil {
-			return sql.NullInt32{}, errors.New("org_id must be an integer")
+		return sql.NullString{
+			String: s,
+			Valid:  true,
 		}
-		return sql.NullInt32{
-			Int32: int32(intValue),
-			Valid: true,
-		}, nil
-	}
-
-	// Set values for GistSQL fields
-	orgIDNullInt32, err := toNullInt32(orgID)
-	if err != nil {
-		return nil, err
 	}
 
 	if language == "" {
@@ -45,16 +36,16 @@ func (g *GistServiceImpl) Save(name string, content string, ownerID string, orgI
 	}
 
 	m := GistSQL{
-		ID: sql.NullInt32{
-			Valid: false, // Assuming ID is auto-generated and not required here
-			Int32: 0,
+		ID: sql.NullString{
+			Valid:  false, // Assuming ID is auto-generated and not required here
+			String: "",
 		},
 		Name:        toNullString(name),
 		Content:     toNullString(content),
 		OwnerID:     toNullString(ownerID),
 		Language:    toNullString(language),
 		Description: toNullString(description),
-		OrgID:       orgIDNullInt32,
+		OrgID:       toReallyNullString(orgID),
 	}
 
 	// Save and handle errors
@@ -74,9 +65,9 @@ func (g *GistServiceImpl) UpdateName(id string, name string, owner_id string) (*
 	}
 
 	m := GistSQL{
-		ID: sql.NullInt32{
-			Valid: true,
-			Int32: 0,
+		ID: sql.NullString{
+			Valid:  true,
+			String: "",
 		},
 		Name: sql.NullString{
 			String: name,
@@ -106,9 +97,9 @@ func (g *GistServiceImpl) UpdateContent(id string, content string, owner_id stri
 		return nil, err
 	}
 	m := GistSQL{
-		ID: sql.NullInt32{
-			Valid: true,
-			Int32: 0,
+		ID: sql.NullString{
+			Valid:  true,
+			String: "",
 		},
 		Name: sql.NullString{
 			String: "",
@@ -139,9 +130,9 @@ func (g *GistServiceImpl) UpdateDescription(id string, description string, owner
 		return nil, err
 	}
 	m := GistSQL{
-		ID: sql.NullInt32{
-			Valid: true,
-			Int32: 0,
+		ID: sql.NullString{
+			Valid:  true,
+			String: "",
 		},
 		Name: sql.NullString{
 			String: "",
@@ -173,9 +164,9 @@ func (g *GistServiceImpl) UpdateLanguage(id string, language string, owner_id st
 		return nil, err
 	}
 	m := GistSQL{
-		ID: sql.NullInt32{
-			Valid: true,
-			Int32: 0,
+		ID: sql.NullString{
+			Valid:  true,
+			String: "",
 		},
 		Name: sql.NullString{
 			String: "",
@@ -204,9 +195,9 @@ func (g *GistServiceImpl) Delete(id string, owner_id string) error {
 		return err
 	}
 	m := GistSQL{
-		ID: sql.NullInt32{
-			Valid: true,
-			Int32: 0,
+		ID: sql.NullString{
+			Valid:  true,
+			String: "",
 		},
 		Name: sql.NullString{
 			String: "",
