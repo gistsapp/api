@@ -25,6 +25,7 @@ func Cookie(key string, value string) *fiber.Cookie {
 func ClearCookie(key string) *fiber.Cookie {
 	cookie := new(fiber.Cookie)
 	cookie.Name = key
+	//comment
 	cookie.HTTPOnly = true
 	cookie.Value = ""
 	cookie.Expires = time.Now().Add(-time.Hour)
