@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/gistapp/api/utils"
+	"github.com/gistsapp/pogo/pogo"
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -57,6 +58,7 @@ func (db *DatabaseV1) Query(query string, args ...any) (*sql.Rows, error) {
 }
 
 var Database IDatabase = newDatabase()
+var PogoDatabase *pogo.Database = pogo.NewDatabase(utils.Get("PG_USER"), utils.Get("PG_PASSWORD"), utils.Get("PG_HOST"), utils.Get("PG_PORT"), utils.Get("PG_DATABASE"))
 
 func (db *DatabaseV1) Exec(query string, args ...any) (sql.Result, error) {
 	conn, err := db.Connect()
