@@ -2,6 +2,7 @@ package storage
 
 import (
 	"database/sql"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -43,6 +44,39 @@ func (db *DatabaseV1) Connect() (*sql.DB, error) {
 	return sql.Open("postgres", connStr)
 }
 
+func CreateDatabase() error {
+	connStr := "user=" + utils.Get("PG_USER") + " password=" + utils.Get("PG_PASSWORD") + " host=" + utils.Get("PG_HOST") + " port=" + utils.Get("PG_PORT") + " dbname=postgres sslmode=disable"
+	conn, err := sql.Open("postgres", connStr)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+	_, err = conn.Exec("CREATE DATABASE " + utils.Get("PG_DATABASE"))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func DropDatabase(force bool) error {
+	connStr := "user=" + utils.Get("PG_USER") + " password=" + utils.Get("PG_PASSWORD") + " host=" + utils.Get("PG_HOST") + " port=" + utils.Get("PG_PORT") + " dbname=postgres sslmode=disable"
+	conn, err := sql.Open("postgres", connStr)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	if force {
+		_, err = conn.Exec("DROP DATABASE " + utils.Get("PG_DATABASE") + " WITH (FORCE)")
+	} else {
+		_, err = conn.Exec("DROP DATABASE " + utils.Get("PG_DATABASE"))
+	}
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (db *DatabaseV1) Query(query string, args ...any) (*sql.Rows, error) {
 	conn, err := db.Connect()
 	if err != nil {
@@ -76,6 +110,10 @@ func Migrate() error {
 		panic(err)
 	}
 	exPath := filepath.Dir(ex)
+	if utils.Get("ENV") == "testing" {
+		exPath = "./../"
+	}
+	fmt.Printf("Migrating from: %s\n", exPath)
 
 	m, err := migrate.New(
 		"file://"+exPath+"/migrations",

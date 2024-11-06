@@ -10,9 +10,11 @@ import (
 	"github.com/gistapp/api/organizations"
 	"github.com/gistapp/api/server"
 	"github.com/gistapp/api/storage"
+	"github.com/gistapp/api/tests/factory"
 	"github.com/gistapp/api/tests/mock"
 	"github.com/gistapp/api/user"
 	"github.com/gistapp/api/utils"
+	"github.com/go-faker/faker/v4"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -51,6 +53,7 @@ func InitServerGists() *fiber.App {
 }
 
 func TestCreateGists(t *testing.T) {
+
 	t.Run("Create a new personal gist", func(t *testing.T) {
 		app := InitServerGists()
 		auth_token := GetAuthToken(t, app)
@@ -106,4 +109,99 @@ func TestCreateGists(t *testing.T) {
 		DeleteAuthUser(t, auth_token)
 
 	})
+
+	t.Run("Create a new gist with invalid payload", func(t *testing.T) {
+		app := InitServerGists()
+		user_factory := factory.UserWithAuthFactory()
+		user := user_factory.Create()
+		access_token, err := user.GetAccessToken()
+
+		if err != nil {
+			t.Fatalf("Failed to get access token: %v", err)
+		}
+
+		Client(t, app).Post("/gists").WithPayload(map[string]string{
+			"zob": "test",
+		}).WithHeaders(map[string]string{
+			"Content-Type":  "application/json",
+			"Authorization": fmt.Sprintf("Bearer %s", access_token),
+		}).Send().ExpectStatus(400)
+
+		err = factory.UserWithAuthFactory().Clean()
+
+		if err != nil {
+			t.Fatalf("Failed to clean up user: %v", err)
+		}
+	})
+
+	t.Run("Verify anyone can access public gist", func(t *testing.T) {
+		app := InitServerGists()
+		user_factory := factory.UserWithAuthFactory()
+		bob := user_factory.Create()
+		access_token, err := bob.GetAccessToken()
+
+		if err != nil {
+			t.Fatalf("Failed to get access token: %v", err)
+		}
+
+		client := Client(t, app).Post("/gists").WithPayload(map[string]string{
+			"name":    faker.Name(),
+			"content": faker.Sentence(),
+		}).WithHeaders(map[string]string{
+			"Content-Type":  "application/json",
+			"Authorization": fmt.Sprintf("Bearer %s", access_token),
+		}).Send().ExpectStatus(201)
+
+		json_resp, err := JSONHttpResponse(client.Response)
+
+		if err != nil {
+			t.Fatalf("Failed to parse JSON response: %v", err)
+		}
+
+		gist_id := json_resp["id"]
+
+		Client(t, app).Get(fmt.Sprintf("/gists/%s", gist_id)).Send().ExpectStatus(200)
+
+		err = factory.UserWithAuthFactory().Clean()
+
+		if err != nil {
+			t.Fatalf("Failed to clean up user: %v", err)
+		}
+	})
+
+	t.Run("Verify only the owner can access private gist", func(t *testing.T) {
+		app := InitServerGists()
+		user_factory := factory.UserWithAuthFactory()
+		alice := user_factory.Create()
+		alice_access_token, err := alice.GetAccessToken()
+		if err != nil {
+			t.Fatalf("Failed to get access token: %v", err)
+		}
+		client := Client(t, app).Post("/gists").WithPayload(map[string]string{
+			"name":       faker.Name(),
+			"content":    faker.Sentence(),
+			"visibility": "private",
+		}).WithHeaders(map[string]string{
+			"Content-Type":  "application/json",
+			"Authorization": fmt.Sprintf("Bearer %s", alice_access_token),
+		}).Send().ExpectStatus(201)
+		json_resp, err := JSONHttpResponse(client.Response)
+		if err != nil {
+			t.Fatalf("Failed to parse JSON response: %v", err)
+		}
+		gist_id := json_resp["id"]
+		bob := user_factory.Create()
+		bob_access_token, err := bob.GetAccessToken()
+		if err != nil {
+			t.Fatalf("Failed to get access token: %v", err)
+		}
+		Client(t, app).Get(fmt.Sprintf("/gists/%s", gist_id)).WithHeaders(map[string]string{
+			"Authorization": fmt.Sprintf("Bearer %s", bob_access_token),
+		}).Send().ExpectStatus(403)
+		err = factory.UserWithAuthFactory().Clean()
+		if err != nil {
+			t.Fatalf("Failed to clean up user: %v", err)
+		}
+	})
+
 }

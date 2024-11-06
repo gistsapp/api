@@ -1,6 +1,7 @@
 package gists
 
 import (
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
 )
@@ -10,8 +11,8 @@ type GistControllerImpl struct {
 }
 
 type GistSaveValidator struct {
-	Name        string `json:"name"`
-	Content     string `json:"content"`
+	Name        string `json:"name" validate:"required"`
+	Content     string `json:"content" validate:"required"`
 	OrgID       string `json:"org_id,omitempty"`
 	Language    string `json:"language,omitempty"`
 	Description string `json:"description,omitempty"`
@@ -24,6 +25,14 @@ func (g *GistControllerImpl) Save() fiber.Handler {
 		owner_id := c.Locals("pub").(string)
 
 		if err := c.BodyParser(g); err != nil {
+			return c.Status(400).SendString("Request must be valid JSON with fields name and content as text")
+		}
+		validate := validator.New(validator.WithRequiredStructEnabled())
+
+		err := validate.Struct(g)
+
+		if err != nil {
+			log.Error(err)
 			return c.Status(400).SendString("Request must be valid JSON with fields name and content as text")
 		}
 
