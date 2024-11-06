@@ -1,4 +1,4 @@
-package tests
+package test
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 
 	"github.com/gistapp/api/server"
 	"github.com/gistapp/api/storage"
-	"github.com/gistapp/api/tests/mock"
+	"github.com/gistapp/api/test/mock"
 	"github.com/gistapp/api/user"
 	"github.com/gistapp/api/utils"
 	"github.com/gofiber/fiber/v2"

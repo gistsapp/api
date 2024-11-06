@@ -59,8 +59,16 @@ func (s *Server) Setup(routers ...DomainRouter) {
 		router.SubscribeRoutes(&custom_router)
 	}
 
+	defer func() {
+		if err := recover(); err != nil {
+			log.Error(err)
+
+		}
+	}()
+
 }
 
 func (s *Server) Ignite() {
+
 	log.Fatal(s.App.Listen(s.listenAddr))
 }

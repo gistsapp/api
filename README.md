@@ -115,3 +115,9 @@ just migrate
 # or
 migrate -path=migrations -database "postgresql://postgres:postgres@0.0.0.0:5432/gists?sslmode=disable" -verbose up
 ```
+
+To rollback a migration :
+
+```bash
+migrate -path=migrations -database "postgresql://postgres:postgres@localhost:5432/gists?sslmode=disable" -verbose down 1
+```

@@ -13,7 +13,7 @@ func Cookie(key string, value string) *fiber.Cookie {
 	cookie.Value = value
 	cookie.Expires = time.Now().Add(time.Hour * 24 * 30 * 12) // 1 year
 
-	if Get("ENV") == "development" {
+	if Get("ENV") != "production" {
 		cookie.Secure = false
 	} else {
 		cookie.Domain = ".gists.app" // hardcoded
@@ -29,7 +29,7 @@ func ClearCookie(key string) *fiber.Cookie {
 	cookie.Value = ""
 	cookie.Expires = time.Now().Add(-time.Hour)
 	cookie.Secure = true
-	if Get("ENV") == "development" {
+	if Get("ENV") != "production" {
 		cookie.Secure = false
 	} else {
 		cookie.Domain = ".gists.app" // hardcoded

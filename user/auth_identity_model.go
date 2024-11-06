@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/gistapp/api/storage"
+	"github.com/gistapp/api/utils"
 	"github.com/gofiber/fiber/v2/log"
 )
 
@@ -33,6 +34,11 @@ type AuthIdentityAndUser struct {
 	AuthIdentity AuthIdentity
 	User         User
 }
+
+func (ai *AuthIdentityAndUser) GetAccessToken() (string, error) {
+	return utils.CreateAccessToken(ai.User.Email, ai.User.ID)
+}
+
 type AuthIdentityModel interface {
 	Save() (*AuthIdentity, error)
 }

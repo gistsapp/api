@@ -9,9 +9,12 @@ import (
 
 func AuthNeededMiddleware(ctx *fiber.Ctx) error {
 	if ctx.Get("Authorization") == "" {
-		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized",
-		})
+		// return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+		// 	"error": "Unauthorized",
+		// })
+		ctx.Locals("pub", "Guest")
+		ctx.Locals("email", "Guest")
+		return ctx.Next()
 	}
 	raw_token := string(ctx.Request().Header.Peek("Authorization")[7:])
 	claims, err := AuthService.IsAuthenticated(raw_token)

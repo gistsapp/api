@@ -9,7 +9,7 @@ import (
 
 type GistServiceImpl struct{}
 
-func (g *GistServiceImpl) Save(name string, content string, ownerID string, orgID string, language string, description string) (*Gist, error) {
+func (g *GistServiceImpl) Save(name string, content string, ownerID string, orgID string, language string, description string, visibility string) (*Gist, error) {
 	// Helper function to set NullString type based on value
 	toNullString := func(s string) sql.NullString {
 		return sql.NullString{
@@ -46,6 +46,7 @@ func (g *GistServiceImpl) Save(name string, content string, ownerID string, orgI
 		Language:    toNullString(language),
 		Description: toNullString(description),
 		OrgID:       toReallyNullString(orgID),
+		Visibility:  toNullString(visibility),
 	}
 
 	// Save and handle errors
@@ -53,7 +54,16 @@ func (g *GistServiceImpl) Save(name string, content string, ownerID string, orgI
 	if err != nil {
 		return nil, errors.New("couldn't insert into database gists")
 	}
-	return gist, nil
+
+	rights := GistRights{
+		UserID: ownerID,
+		GistID: gist.ID,
+		Right:  string(Write),
+	}
+
+	_, err = rights.Save()
+
+	return gist, err
 }
 
 func (g *GistServiceImpl) UpdateName(id string, name string, owner_id string) (*Gist, error) {

@@ -1,12 +1,12 @@
-name: Continuous testing
+name: Continuous testing with coverage
 on:
-  pull_request:
-    branches:
-      - main
+  workflow_dispatch:
+  schedule:
+    - cron: "0 12,23 * * *"
 
 jobs:
-  test:
-    name: Integration tests
+  covtest:
+    name: Integration tests with coverage
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -28,7 +28,14 @@ jobs:
         uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
         with:
           go-version: 1.23.0
+      - uses: extractions/setup-just@v2
       - name: Run migrations
         run: go build -o main && chmod +x ./main && PORT="4000" PG_USER="postgres" PG_PASSWORD="postgres" PG_PORT="5432" PG_HOST="0.0.0.0" PG_DATABASE="gists" GOOGLE_KEY="" GOOGLE_SECRET="" GITHUB_KEY="" GITHUB_SECRET="" PUBLIC_URL="http://localhost:4000" APP_KEY="DUMP_APP_KEY_FOR_TEST" SMTP_HOST="" MAIL_SMTP="" MAIL_PASSWORD="" SMTP_PORT="" FRONTEND_URL="http://localhost:3000" ./main migrate
       - name: Run tests
-        run: cd test && PORT="4000" PG_USER="postgres" PG_PASSWORD="postgres" PG_PORT="5432" PG_HOST="0.0.0.0" PG_DATABASE="gists" GOOGLE_KEY="" GOOGLE_SECRET="" GITHUB_KEY="" GITHUB_SECRET="" PUBLIC_URL="http://localhost:4000" APP_KEY="DUMP_APP_KEY_FOR_TEST" SMTP_HOST="" MAIL_SMTP="" MAIL_PASSWORD="" SMTP_PORT="" FRONTEND_URL="http://localhost:3000" go test
+        run: |
+          export PORT="4000" PG_USER="postgres" PG_PASSWORD="postgres" PG_PORT="5432" PG_HOST="0.0.0.0" PG_DATABASE="gists" GOOGLE_KEY="" GOOGLE_SECRET="" GITHUB_KEY="" GITHUB_SECRET="" PUBLIC_URL="http://localhost:4000" APP_KEY="DUMP_APP_KEY_FOR_TEST" SMTP_HOST="" MAIL_SMTP="" MAIL_PASSWORD="" SMTP_PORT="" FRONTEND_URL="http://localhost:3000"
+            just report-all
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-result
+          path: ./test/coverage/
