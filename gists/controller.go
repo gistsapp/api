@@ -1,6 +1,8 @@
 package gists
 
 import (
+	"strconv"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
@@ -83,7 +85,27 @@ func (g *GistControllerImpl) UpdateName() fiber.Handler {
 func (g *GistControllerImpl) FindAll() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		owner_id := c.Locals("pub").(string)
-		gists, err := GistService.FindAll(owner_id)
+		limit_param := c.Query("limit")
+		offset_param := c.Query("offset")
+
+		if limit_param == "" {
+			limit_param = "50"
+		}
+
+		if offset_param == "" {
+			offset_param = "0"
+		}
+
+		limit, err := strconv.Atoi(limit_param)
+		if err != nil {
+			return c.Status(400).SendString("limit must be a number")
+		}
+		offset, err := strconv.Atoi(offset_param)
+		if err != nil {
+			return c.Status(400).SendString("offset must be a number")
+		}
+
+		gists, err := GistService.FindAll(owner_id, limit, offset)
 		if err != nil {
 			return c.Status(500).SendString(err.Error())
 		}

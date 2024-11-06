@@ -230,7 +230,7 @@ func (g *GistServiceImpl) Delete(id string, owner_id string) error {
 	return nil
 }
 
-func (g *GistServiceImpl) FindAll(owner_id string) ([]Gist, error) {
+func (g *GistServiceImpl) FindAll(owner_id string, limit int, offset int) ([]Gist, error) {
 	m := GistSQL{
 
 		OwnerID: sql.NullString{
@@ -238,7 +238,7 @@ func (g *GistServiceImpl) FindAll(owner_id string) ([]Gist, error) {
 			Valid:  true,
 		},
 	}
-	gists, err := m.FindAll()
+	gists, err := m.FindAll(limit, offset)
 	if err != nil {
 		return nil, errors.New("couldn't get gists")
 	}
