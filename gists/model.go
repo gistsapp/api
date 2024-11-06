@@ -105,11 +105,11 @@ func (g *GistSQL) FindByID(id string) (*Gist, error) {
 	return &gists[0], err
 }
 
-func (g *GistSQL) FindAll() ([]Gist, error) {
+func (g *GistSQL) FindAll(limit int, offset int) ([]Gist, error) {
 	db := storage.PogoDatabase
 
 	gists := make([]Gist, 0)
-	err := pogo.SuperQuery(db, "SELECT :fields FROM gists WHERE owner = $1", &gists, g.OwnerID.String)
+	err := pogo.SuperQuery(db, "SELECT :fields FROM gists WHERE owner = $1 LIMIT $2 OFFSET $3", &gists, g.OwnerID.String, limit, offset)
 	if len(gists) <= 0 {
 		log.Error(err)
 		return nil, errors.New("gist not found")
