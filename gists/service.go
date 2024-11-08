@@ -260,6 +260,21 @@ func (g *GistServiceImpl) FindByID(id string, owner_id string) (*Gist, error) {
 	return gist, nil
 }
 
+func (g *GistServiceImpl) GetPageCount(owner_id string, limit int) (int, error) {
+	m := GistSQL{
+		OwnerID: sql.NullString{
+			String: owner_id,
+			Valid:  true,
+		},
+	}
+	nb_gists, err := m.Count()
+	if err != nil {
+		return 0, errors.New("couldn't get gists count")
+	}
+	nb_pages := int(nb_gists / limit)
+	return nb_pages, nil
+}
+
 func gistExists(id string, owner_id string) error {
 	m := GistSQL{
 

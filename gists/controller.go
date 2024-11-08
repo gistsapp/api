@@ -110,7 +110,15 @@ func (g *GistControllerImpl) FindAll() fiber.Handler {
 			return c.Status(500).SendString(err.Error())
 		}
 
-		return c.JSON(gists)
+		nb_pages, err := GistService.GetPageCount(owner_id, limit)
+		if err != nil {
+			return c.Status(500).SendString(err.Error())
+		}
+
+		return c.JSON(map[string]interface{}{
+			"gists":    gists,
+			"nb_pages": nb_pages,
+		})
 	}
 }
 
