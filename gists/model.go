@@ -116,3 +116,19 @@ func (g *GistSQL) FindAll(limit int, offset int) ([]Gist, error) {
 	}
 	return gists, err
 }
+
+func (g *GistSQL) Count() (int, error) {
+	db := storage.PogoDatabase
+	var count int
+	rows, err := db.Query("SELECT COUNT(*) FROM gists WHERE owner = $1", g.OwnerID.String)
+
+	rows.Next()
+
+	rows.Scan(&count)
+
+	if err != nil {
+		log.Error(err)
+		return 0, errors.New("couldn't get gists")
+	}
+	return count, nil
+}
