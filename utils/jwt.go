@@ -87,7 +87,7 @@ func VerifyJWT(raw_token string) (map[string]any, error) {
 		return map[string]any{}, err
 	}
 
-	var to_return map[string]any = make(map[string]any)
+	var to_return = make(map[string]any)
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if ok && token.Valid {

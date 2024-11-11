@@ -3,6 +3,7 @@ package gists
 import (
 	"strconv"
 
+	"github.com/gistapp/api/utils"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
@@ -13,20 +14,31 @@ type GistControllerImpl struct {
 }
 
 type GistSaveValidator struct {
-	Name        string `json:"name" validate:"required"`
-	Content     string `json:"content" validate:"required"`
-	OrgID       string `json:"org_id,omitempty"`
-	Language    string `json:"language,omitempty"`
-	Description string `json:"description,omitempty"`
-	Visibility  string `json:"visibility,omitempty"`
+	Name        string           `json:"name" validate:"required"`
+	Content     string           `json:"content" validate:"required"`
+	OrgID       utils.ZeroString `json:"org_id,omitempty"`
+	Language    string           `json:"language,omitempty"`
+	Description string           `json:"description,omitempty"`
+	Visibility  string           `json:"visibility,omitempty"`
+}
+
+func defaultGist() *GistSaveValidator {
+	return &GistSaveValidator{
+		Language:    "plaintext",
+		Visibility:  "public",
+		Description: "",
+	}
+
 }
 
 func (g *GistControllerImpl) Save() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		g := new(GistSaveValidator)
+		g := defaultGist()
 		owner_id := c.Locals("pub").(string)
+		log.Info(owner_id)
 
 		if err := c.BodyParser(g); err != nil {
+			log.Info(err)
 			return c.Status(400).SendString("Request must be valid JSON with fields name and content as text")
 		}
 		validate := validator.New(validator.WithRequiredStructEnabled())
@@ -38,17 +50,18 @@ func (g *GistControllerImpl) Save() fiber.Handler {
 			return c.Status(400).SendString("Request must be valid JSON with fields name and content as text")
 		}
 
-		visibility := "public"
-		if g.Visibility == "private" {
-			visibility = "private"
+		if g.Visibility != "public" && g.Visibility != "private" {
+			return c.Status(400).SendString("Visibility must be either public or private")
 		}
+		log.Info(g)
 
-		gist, err := GistService.Save(g.Name, g.Content, owner_id, g.OrgID, g.Language, g.Description, visibility)
+		gist, err := GistService.Save(g.Name, g.Content, owner_id, g.OrgID.SqlString(), g.Language, g.Description, g.Visibility)
 		if err != nil {
+			log.Error(err)
 			return c.Status(500).SendString(err.Error())
 		}
 
-		return c.Status(201).JSON(gist)
+		return c.Status(201).JSON(gist.ToJSON())
 	}
 }
 
@@ -78,7 +91,7 @@ func (g *GistControllerImpl) UpdateName() fiber.Handler {
 			}
 			return c.Status(400).SendString(err.Error()) //could be because gist not found
 		}
-		return c.Status(200).JSON(gist)
+		return c.Status(200).JSON(gist.ToJSON())
 	}
 }
 
@@ -115,8 +128,15 @@ func (g *GistControllerImpl) FindAll() fiber.Handler {
 			return c.Status(500).SendString(err.Error())
 		}
 
+		gists_json := make([]map[string]interface{}, 0)
+
+		for _, gist := range gists {
+			gists_json = append(gists_json, gist.ToJSON())
+
+		}
+
 		return c.JSON(map[string]interface{}{
-			"gists":    gists,
+			"gists":    gists_json,
 			"nb_pages": nb_pages,
 		})
 	}
@@ -205,7 +225,7 @@ func (g *GistControllerImpl) UpdateContent() fiber.Handler {
 
 func (g *GistControllerImpl) UpdateLanguage() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		g_body := new(GistSaveValidator)
+		g_body := defaultGist()
 		if err := c.BodyParser(g_body); err != nil {
 			return c.Status(400).SendString("Request must be valid JSON with fields name and content as text")
 		}

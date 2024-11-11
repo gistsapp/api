@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gistapp/api/user"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -71,7 +72,12 @@ func (tr *TestRequest) Delete(url string) *TestRequest {
 
 func (tr *TestRequest) WithHeaders(headers map[string]string) *TestRequest {
 
-	tr.Headers = headers
+	if tr.Headers == nil {
+		tr.Headers = make(map[string]string)
+	}
+	for key, value := range headers {
+		tr.Headers[key] = value
+	}
 	return tr
 }
 
@@ -82,6 +88,21 @@ func (tr *TestRequest) WithPayload(payload interface{}) *TestRequest {
 		return tr
 	}
 	tr.Payload = strings.NewReader(string(jsonPayload))
+	return tr
+}
+
+func (tr *TestRequest) WithJson() *TestRequest {
+	if tr.Headers == nil {
+		tr.Headers = make(map[string]string)
+	}
+	tr.Headers["Content-Type"] = "application/json"
+	return tr
+}
+
+func (tr *TestRequest) LoginAs(user user.AuthIdentityAndUser) *TestRequest {
+	auth_token, err := user.GetAccessToken()
+	tr.Err = err
+	tr.Headers["Authorization"] = "Bearer " + auth_token
 	return tr
 }
 
@@ -133,7 +154,9 @@ func JSONHttpResponse(resp *http.Response) (map[string]string, error) {
 
 func (tr *TestRequest) ExpectStatus(status int) *TestRequest {
 	if tr.Response.StatusCode != status {
-		tr.T.Fatalf("Expected status code %d, got %d", status, tr.Response.StatusCode)
+		body, err := JSONHttpResponse(tr.Response)
+		tr.Err = err
+		tr.T.Fatalf("Expected status code %d, got %d : body is %s", status, tr.Response.StatusCode, body)
 	}
 	return tr
 }

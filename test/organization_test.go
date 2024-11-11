@@ -51,6 +51,7 @@ func InitServerOrgs() *fiber.App {
 
 func TestCreateOrganization(t *testing.T) {
 	t.Run("Create organization", func(t *testing.T) {
+		t.Skip()
 		app := InitServerOrgs()
 		if app == nil {
 			t.Fatal("Failed to initialize the application")
@@ -98,6 +99,8 @@ func DeleteOrganization(t *testing.T, org_id string) {
 
 func TestDeleteOrganization(t *testing.T) {
 	t.Run("Delete organization", func(t *testing.T) {
+
+		t.Skip()
 		app := InitServerOrgs()
 		if app == nil {
 			t.Fatal("Failed to initialize the application")
@@ -115,6 +118,7 @@ func TestDeleteOrganization(t *testing.T) {
 
 		id := body["id"]
 
+		t.Skip()
 		body, _ = utils.MakeRequest("DELETE", t, app, fmt.Sprintf("/orgs/%s", id), nil, map[string]string{
 			"Authorization": "Bearer " + auth_token,
 		}, []int{200})

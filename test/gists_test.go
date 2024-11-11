@@ -54,22 +54,17 @@ func InitServerGists() *fiber.App {
 
 func TestCreateGists(t *testing.T) {
 
-	t.Run("Create a new personal gist", func(t *testing.T) {
+	t.Run("Create a personal gist", func(t *testing.T) {
 		app := InitServerGists()
-		auth_token := GetAuthToken(t, app)
+		user_factory := factory.UserWithAuthFactory()
+		bob := user_factory.Create()
 
-		_, req := utils.MakeRequest("POST", t, app, "/gists", map[string]string{
-			"name":    "Test Gist",
-			"content": "Test content",
-		}, map[string]string{
-			"Authorization": fmt.Sprintf("Bearer %s", auth_token),
-		}, []int{201})
+		Client(t, app).Post("/gists").WithJson().LoginAs(bob).WithPayload(map[string]string{
+			"name":    faker.Name(),
+			"content": faker.Sentence(),
+		}).Send().ExpectStatus(201)
 
-		if req.StatusCode != 201 {
-			t.Fatalf("Expected status code 201, got %d", req.StatusCode)
-		}
-
-		DeleteAuthUser(t, auth_token)
+		user_factory.Clean()
 
 	})
 
