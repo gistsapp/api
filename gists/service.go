@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 
+	"github.com/gistapp/api/utils"
 	"github.com/gofiber/fiber/v2/log"
 )
 
@@ -129,10 +130,7 @@ func (g *GistServiceImpl) FindByID(id string, owner_id string) (*Gist, error) {
 
 func (g *GistServiceImpl) GetPageCount(owner_id string, limit int) (int, error) {
 	m := GistSQL{
-		OwnerID: sql.NullString{
-			String: owner_id,
-			Valid:  true,
-		},
+		OwnerID: owner_id,
 	}
 	nb_gists, err := m.Count()
 	if err != nil {
@@ -140,6 +138,19 @@ func (g *GistServiceImpl) GetPageCount(owner_id string, limit int) (int, error) 
 	}
 	nb_pages := int(nb_gists / limit)
 	return nb_pages, nil
+}
+
+func (g *GistServiceImpl) Update(id string, name string, org_id utils.ZeroString, content string, language string, description string, visibility string, owner_id string) (*Gist, error) {
+	err := gistExists(id, owner_id)
+	if err != nil {
+		return nil, err
+	}
+	m := NewGistSQL(id, name, content, owner_id, org_id.SqlString(), description, language, visibility)
+	gist, err := m.Update()
+	if err != nil {
+		return nil, errors.New("couldn't update gist")
+	}
+	return gist, nil
 }
 
 func gistExists(id string, owner_id string) error {

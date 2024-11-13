@@ -155,10 +155,20 @@ func (g *GistSQL) FindAll(limit int, offset int) ([]Gist, error) {
 	return gists, err
 }
 
+func (g *GistSQL) Update() (*Gist, error) {
+	db := storage.PogoDatabase
+	gists := make([]Gist, 0)
+	err := pogo.SuperQuery(db, "UPDATE gists SET name = $1, content = $2, language = $3, description = $4, visibility = $5 WHERE gist_id = $6 AND owner = $7 RETURNING :fields", &gists, g.Name, g.Content, g.Language, g.Description, g.Visibility, g.ID, g.OwnerID)
+	if len(gists) <= 0 {
+		return nil, errors.New("gist not found")
+	}
+	return &gists[0], err
+}
+
 func (g *GistSQL) Count() (int, error) {
 	db := storage.PogoDatabase
 	var count int
-	rows, err := db.Query("SELECT COUNT(*) FROM gists WHERE owner = $1", g.OwnerID.String)
+	rows, err := db.Query("SELECT COUNT(*) FROM gists WHERE owner = $1", g.OwnerID)
 
 	rows.Next()
 

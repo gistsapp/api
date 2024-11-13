@@ -1,6 +1,7 @@
 package gists
 
 import (
+	"errors"
 	"strconv"
 
 	"github.com/gistapp/api/utils"
@@ -14,6 +15,15 @@ type GistControllerImpl struct {
 }
 
 type GistSaveValidator struct {
+	Name        string           `json:"name" validate:"required"`
+	Content     string           `json:"content" validate:"required"`
+	OrgID       utils.ZeroString `json:"org_id,omitempty"`
+	Language    string           `json:"language,omitempty"`
+	Description string           `json:"description,omitempty"`
+	Visibility  string           `json:"visibility,omitempty"`
+}
+
+type GistUpdateValidator struct {
 	Name        string           `json:"name" validate:"required"`
 	Content     string           `json:"content" validate:"required"`
 	OrgID       utils.ZeroString `json:"org_id,omitempty"`
@@ -303,6 +313,55 @@ func (g *GistControllerImpl) Delete() fiber.Handler {
 		}
 		return c.Status(200).SendString("Gist deleted successfully")
 	}
+}
+
+func (g *GistControllerImpl) Update() fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		gist_validate, err := validateGist(c)
+		id := c.Params("id")
+		owner_id := c.Locals("pub").(string)
+		if err != nil {
+			return c.Status(400).SendString(err.Error())
+		}
+
+		can_edit, err := g.gist_guard.CanEdit(id, owner_id)
+
+		if err != nil {
+			return c.Status(500).SendString(err.Error())
+		}
+
+		if !can_edit {
+			return c.Status(403).SendString("You do not have permission to edit this gist")
+		}
+
+		gist, err := GistService.Update(id, gist_validate.Name, gist_validate.OrgID, gist_validate.Content, gist_validate.Language, gist_validate.Description, gist_validate.Visibility, owner_id)
+		return c.Status(200).JSON(gist.ToJSON())
+	}
+}
+
+func validateGist(c *fiber.Ctx) (*GistSaveValidator, error) {
+	g := defaultGist()
+	owner_id := c.Locals("pub").(string)
+	log.Info(owner_id)
+
+	if err := c.BodyParser(g); err != nil {
+		log.Info(err)
+		return nil, err
+	}
+	validate := validator.New(validator.WithRequiredStructEnabled())
+
+	err := validate.Struct(g)
+
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+
+	if g.Visibility != "public" && g.Visibility != "private" {
+		return nil, errors.New("Visibility must be either public or private")
+	}
+
+	return g, nil
 }
 
 var GistController GistControllerImpl = GistControllerImpl{}

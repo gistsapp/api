@@ -160,3 +160,9 @@ func (tr *TestRequest) ExpectStatus(status int) *TestRequest {
 	}
 	return tr
 }
+
+func (tr *TestRequest) JSON() (map[string]string, error) {
+	body, err := JSONHttpResponse(tr.Response)
+	tr.Err = err
+	return body, err
+}

@@ -30,7 +30,6 @@ func (m *MockAuthService) LocalAuth(email string) (user.TokenSQL, error) {
 	_, err := token_model.Save()
 
 	return token_model, err
-
 }
 
 func (m *MockAuthService) VerifyLocalAuthToken(token string, email string) (*user.Tokens, error) {
