@@ -4,54 +4,30 @@ import (
 	"database/sql"
 	"errors"
 
+	"github.com/gistapp/api/utils"
 	"github.com/gofiber/fiber/v2/log"
 )
 
 type GistServiceImpl struct{}
 
-func (g *GistServiceImpl) Save(name string, content string, ownerID string, orgID string, language string, description string, visibility string) (*Gist, error) {
+func (g *GistServiceImpl) Save(name string, content string, ownerID string, orgID sql.NullString, language string, description string, visibility string) (*Gist, error) {
 	// Helper function to set NullString type based on value
-	toNullString := func(s string) sql.NullString {
-		return sql.NullString{
-			String: s,
-			Valid:  true,
-		}
-	}
-
-	toReallyNullString := func(s string) sql.NullString {
-		if s == "" {
-			return sql.NullString{
-				String: "",
-				Valid:  false,
-			}
-		}
-		return sql.NullString{
-			String: s,
-			Valid:  true,
-		}
-	}
-
-	if language == "" {
-		language = "text"
-	}
 
 	m := GistSQL{
-		ID: sql.NullString{
-			Valid:  false, // Assuming ID is auto-generated and not required here
-			String: "",
-		},
-		Name:        toNullString(name),
-		Content:     toNullString(content),
-		OwnerID:     toNullString(ownerID),
-		Language:    toNullString(language),
-		Description: toNullString(description),
-		OrgID:       toReallyNullString(orgID),
-		Visibility:  toNullString(visibility),
+		ID:          "",
+		Name:        name,
+		Content:     content,
+		OwnerID:     ownerID,
+		Language:    language,
+		Description: description,
+		OrgID:       orgID,
+		Visibility:  visibility,
 	}
 
 	// Save and handle errors
 	gist, err := m.Save()
 	if err != nil {
+		log.Error(err)
 		return nil, errors.New("couldn't insert into database gists")
 	}
 
@@ -74,25 +50,8 @@ func (g *GistServiceImpl) UpdateName(id string, name string, owner_id string) (*
 		return nil, f
 	}
 
-	m := GistSQL{
-		ID: sql.NullString{
-			Valid:  true,
-			String: "",
-		},
-		Name: sql.NullString{
-			String: name,
-			Valid:  true,
-		},
-		Content: sql.NullString{
-			String: "",
-			Valid:  false,
-		},
+	m := NewGistSQL(id, name, "", owner_id, sql.NullString{}, "", "", "")
 
-		OwnerID: sql.NullString{
-			String: owner_id,
-			Valid:  true,
-		},
-	}
 	gist, err := m.UpdateName(id)
 	if err != nil {
 		return nil, errors.New("couldn't update name in database gists")
@@ -106,26 +65,7 @@ func (g *GistServiceImpl) UpdateContent(id string, content string, owner_id stri
 	if err != nil {
 		return nil, err
 	}
-	m := GistSQL{
-		ID: sql.NullString{
-			Valid:  true,
-			String: "",
-		},
-		Name: sql.NullString{
-			String: "",
-			Valid:  false,
-		},
-		Content: sql.NullString{
-			String: content,
-			Valid:  true,
-		},
-
-		OwnerID: sql.NullString{
-			String: owner_id,
-			Valid:  true,
-		},
-	}
-
+	m := NewGistSQL(id, "", content, owner_id, sql.NullString{}, "", "", "")
 	gist, err := m.UpdateContent(id)
 	if err != nil {
 		log.Error(err)
@@ -139,28 +79,7 @@ func (g *GistServiceImpl) UpdateDescription(id string, description string, owner
 	if err != nil {
 		return nil, err
 	}
-	m := GistSQL{
-		ID: sql.NullString{
-			Valid:  true,
-			String: "",
-		},
-		Name: sql.NullString{
-			String: "",
-			Valid:  false,
-		},
-		Content: sql.NullString{
-			String: "",
-			Valid:  false,
-		},
-		Description: sql.NullString{
-			String: description,
-			Valid:  true,
-		},
-		OwnerID: sql.NullString{
-			String: owner_id,
-			Valid:  true,
-		},
-	}
+	m := NewGistSQL(id, "", "", owner_id, sql.NullString{}, "", "", "")
 	gist, err := m.UpdateField(id, "description", description)
 	if err != nil {
 		return nil, errors.New("couldn't update description in database gists")
@@ -173,28 +92,7 @@ func (g *GistServiceImpl) UpdateLanguage(id string, language string, owner_id st
 	if err != nil {
 		return nil, err
 	}
-	m := GistSQL{
-		ID: sql.NullString{
-			Valid:  true,
-			String: "",
-		},
-		Name: sql.NullString{
-			String: "",
-			Valid:  false,
-		},
-		Content: sql.NullString{
-			String: "",
-			Valid:  false,
-		},
-		Language: sql.NullString{
-			String: language,
-			Valid:  true,
-		},
-		OwnerID: sql.NullString{
-			String: owner_id,
-			Valid:  true,
-		},
-	}
+	m := NewGistSQL(id, "", "", owner_id, sql.NullString{}, "", "", "")
 	return m.UpdateField(id, "language", language)
 }
 
@@ -204,25 +102,7 @@ func (g *GistServiceImpl) Delete(id string, owner_id string) error {
 	if err != nil {
 		return err
 	}
-	m := GistSQL{
-		ID: sql.NullString{
-			Valid:  true,
-			String: "",
-		},
-		Name: sql.NullString{
-			String: "",
-			Valid:  false,
-		},
-		Content: sql.NullString{
-			String: "",
-			Valid:  false,
-		},
-
-		OwnerID: sql.NullString{
-			String: owner_id,
-			Valid:  true,
-		},
-	}
+	m := NewGistSQL(id, "", "", owner_id, sql.NullString{}, "", "", "")
 	err = m.Delete(id)
 	if err != nil {
 		return errors.New("couldn't delete from database gists")
@@ -231,13 +111,7 @@ func (g *GistServiceImpl) Delete(id string, owner_id string) error {
 }
 
 func (g *GistServiceImpl) FindAll(owner_id string, limit int, offset int) ([]Gist, error) {
-	m := GistSQL{
-
-		OwnerID: sql.NullString{
-			String: owner_id,
-			Valid:  true,
-		},
-	}
+	m := NewGistSQL("", "", "", owner_id, sql.NullString{}, "", "", "")
 	gists, err := m.FindAll(limit, offset)
 	if err != nil {
 		return nil, errors.New("couldn't get gists")
@@ -246,13 +120,7 @@ func (g *GistServiceImpl) FindAll(owner_id string, limit int, offset int) ([]Gis
 }
 
 func (g *GistServiceImpl) FindByID(id string, owner_id string) (*Gist, error) {
-	m := GistSQL{
-
-		OwnerID: sql.NullString{
-			String: owner_id,
-			Valid:  true,
-		},
-	}
+	m := NewGistSQL(id, "", "", owner_id, sql.NullString{}, "", "", "")
 	gist, err := m.FindByID(id)
 	if err != nil {
 		return nil, errors.New("couldn't get gist")
@@ -262,10 +130,7 @@ func (g *GistServiceImpl) FindByID(id string, owner_id string) (*Gist, error) {
 
 func (g *GistServiceImpl) GetPageCount(owner_id string, limit int) (int, error) {
 	m := GistSQL{
-		OwnerID: sql.NullString{
-			String: owner_id,
-			Valid:  true,
-		},
+		OwnerID: owner_id,
 	}
 	nb_gists, err := m.Count()
 	if err != nil {
@@ -275,14 +140,21 @@ func (g *GistServiceImpl) GetPageCount(owner_id string, limit int) (int, error) 
 	return nb_pages, nil
 }
 
-func gistExists(id string, owner_id string) error {
-	m := GistSQL{
-
-		OwnerID: sql.NullString{
-			String: owner_id,
-			Valid:  true,
-		},
+func (g *GistServiceImpl) Update(id string, name string, org_id utils.ZeroString, content string, language string, description string, visibility string, owner_id string) (*Gist, error) {
+	err := gistExists(id, owner_id)
+	if err != nil {
+		return nil, err
 	}
+	m := NewGistSQL(id, name, content, owner_id, org_id.SqlString(), description, language, visibility)
+	gist, err := m.Update()
+	if err != nil {
+		return nil, errors.New("couldn't update gist")
+	}
+	return gist, nil
+}
+
+func gistExists(id string, owner_id string) error {
+	m := NewGistSQL(id, "", "", owner_id, sql.NullString{}, "", "", "")
 
 	gists, err := m.FindByID(id)
 

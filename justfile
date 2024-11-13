@@ -12,7 +12,7 @@ report-test PACKAGE:
   cd test && go test -coverprofile=cov-{{PACKAGE}}.out -coverpkg=./../{{PACKAGE}} && go tool cover -html=cov-{{PACKAGE}}.out -o coverage/{{PACKAGE}}-coverage.html && rm cov-{{PACKAGE}}.out
 
 test TEST:
-  go test ./tests/{{TEST}} -v
+  go test ./tests/{{TEST}}
 
 migrate: build
   ./api migrate

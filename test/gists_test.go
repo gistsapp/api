@@ -54,23 +54,16 @@ func InitServerGists() *fiber.App {
 
 func TestCreateGists(t *testing.T) {
 
-	t.Run("Create a new personal gist", func(t *testing.T) {
+	t.Run("Create a personal gist", func(t *testing.T) {
 		app := InitServerGists()
-		auth_token := GetAuthToken(t, app)
+		user_factory := factory.UserWithAuthFactory()
+		bob := user_factory.Create()
+		Client(t, app).Post("/gists").WithJson().LoginAs(bob).WithPayload(map[string]string{
+			"name":    faker.Name(),
+			"content": faker.Sentence(),
+		}).Send().ExpectStatus(201).JSON()
 
-		_, req := utils.MakeRequest("POST", t, app, "/gists", map[string]string{
-			"name":    "Test Gist",
-			"content": "Test content",
-		}, map[string]string{
-			"Authorization": fmt.Sprintf("Bearer %s", auth_token),
-		}, []int{201})
-
-		if req.StatusCode != 201 {
-			t.Fatalf("Expected status code 201, got %d", req.StatusCode)
-		}
-
-		DeleteAuthUser(t, auth_token)
-
+		user_factory.Clean()
 	})
 
 	t.Run("Create a new organization gist", func(t *testing.T) {
@@ -237,5 +230,87 @@ func TestCreateGists(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to clean up user: %v", err)
 		}
+	})
+
+	t.Run("Update a public gist", func(t *testing.T) {
+		app := InitServerGists()
+		gist_payload := map[string]string{
+			"name":        faker.Name(),
+			"content":     faker.Sentence(),
+			"language":    "go",
+			"description": faker.Sentence(),
+			"visibility":  "public",
+		}
+
+		user_factory := factory.UserWithAuthFactory()
+		alice := user_factory.Create()
+		bob := user_factory.Create()
+		response, err := Client(t, app).Post("/gists").WithJson().LoginAs(alice).WithPayload(gist_payload).Send().JSON()
+		if err != nil {
+			t.Fatalf("Failed to create gist: %v", err)
+		}
+
+		gist_id := response["id"]
+
+		update_gist_payload := map[string]string{
+			"name":        faker.Name(),
+			"content":     faker.Sentence(),
+			"language":    "js",
+			"description": faker.Sentence(),
+			"visibility":  "private",
+		}
+		Client(t, app).Put("/gists/" + gist_id).WithJson().LoginAs(bob).WithPayload(update_gist_payload).Send().ExpectStatus(403).JSON()
+
+		response, err = Client(t, app).Put("/gists/" + gist_id).WithJson().LoginAs(alice).WithPayload(update_gist_payload).Send().ExpectStatus(200).JSON()
+
+		fmt.Println(response)
+
+		for key, value := range update_gist_payload {
+			if response[key] != update_gist_payload[key] {
+				t.Fatalf("Expected %s to be %s, got %s", key, value, response[key])
+			}
+		}
+		//retry writing it
+		Client(t, app).Put("/gists/" + gist_id).WithJson().LoginAs(alice).WithPayload(update_gist_payload).Send().ExpectStatus(200).JSON()
+	})
+
+	t.Run("Update a private gist to private", func(t *testing.T) {
+		app := InitServerGists()
+		gist_payload := map[string]string{
+			"name":        faker.Name(),
+			"content":     faker.Sentence(),
+			"language":    "go",
+			"description": faker.Sentence(),
+			"visibility":  "public",
+		}
+
+		user_factory := factory.UserWithAuthFactory()
+		alice := user_factory.Create()
+		bob := user_factory.Create()
+
+		response, err := Client(t, app).
+			Post("/gists").
+			WithJson().
+			LoginAs(alice).
+			WithPayload(gist_payload).
+			Send().
+			JSON()
+		if err != nil {
+			t.Fatalf("Failed to create gist: %v", err)
+		}
+
+		gist_id := response["id"]
+
+		update_gist_payload := map[string]string{
+			"name":        faker.Name(),
+			"content":     faker.Sentence(),
+			"language":    "js",
+			"description": faker.Sentence(),
+			"visibility":  "private",
+		}
+
+		Client(t, app).Put("/gists/" + gist_id).WithJson().LoginAs(alice).WithPayload(update_gist_payload).Send().ExpectStatus(200).JSON()
+		Client(t, app).Put("/gists/" + gist_id).WithJson().LoginAs(bob).WithPayload(update_gist_payload).Send().ExpectStatus(403).JSON()
+
 	})
 }
