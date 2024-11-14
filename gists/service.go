@@ -3,6 +3,7 @@ package gists
 import (
 	"database/sql"
 	"errors"
+	"strings"
 
 	"github.com/gistapp/api/utils"
 	"github.com/gofiber/fiber/v2/log"
@@ -110,11 +111,19 @@ func (g *GistServiceImpl) Delete(id string, owner_id string) error {
 	return nil
 }
 
-func (g *GistServiceImpl) FindAll(owner_id string, limit int, offset int) ([]Gist, error) {
+func (g *GistServiceImpl) FindAll(owner_id string, limit int, offset int, short bool) ([]Gist, error) {
 	m := NewGistSQL("", "", "", owner_id, sql.NullString{}, "", "", "")
 	gists, err := m.FindAll(limit, offset)
 	if err != nil {
 		return nil, errors.New("couldn't get gists")
+	}
+	THRESHOLD := 700
+	if short {
+		for gist := range gists {
+			if len(gists[gist].Content) > THRESHOLD {
+				gists[gist].Content = strings.Join(strings.Split(gists[gist].Content, "")[:THRESHOLD], "")
+			}
+		}
 	}
 	return gists, nil
 }
