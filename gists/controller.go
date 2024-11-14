@@ -110,6 +110,7 @@ func (g *GistControllerImpl) FindAll() fiber.Handler {
 		owner_id := c.Locals("pub").(string)
 		limit_param := c.Query("limit")
 		offset_param := c.Query("offset")
+		short_param := c.Query("short")
 
 		if limit_param == "" {
 			limit_param = "50"
@@ -118,6 +119,8 @@ func (g *GistControllerImpl) FindAll() fiber.Handler {
 		if offset_param == "" {
 			offset_param = "0"
 		}
+
+		short := short_param == "true"
 
 		limit, err := strconv.Atoi(limit_param)
 		if err != nil {
@@ -128,7 +131,7 @@ func (g *GistControllerImpl) FindAll() fiber.Handler {
 			return c.Status(400).SendString("offset must be a number")
 		}
 
-		gists, err := GistService.FindAll(owner_id, limit, offset)
+		gists, err := GistService.FindAll(owner_id, limit, offset, short)
 		if err != nil {
 			return c.Status(500).SendString(err.Error())
 		}
