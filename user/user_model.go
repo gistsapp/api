@@ -41,7 +41,7 @@ func (u *UserSQL) Save() (*User, error) {
 	err = row.Scan(&user.ID, &user.Email, &user.Name, &user.Picture)
 	if err != nil {
 		log.Error(err)
-		return nil, errors.New("couldn't find user")
+		return nil, ErrUserNotFound
 	}
 
 	return &user, nil
@@ -53,7 +53,7 @@ func (u *UserSQL) GetByEmail() (*User, error) {
 
 	if err != nil {
 		log.Error(err)
-		return nil, errors.New("couldn't find user")
+		return nil, ErrUserNotFound
 	}
 
 	var user User
@@ -61,7 +61,7 @@ func (u *UserSQL) GetByEmail() (*User, error) {
 	err = row.Scan(&user.ID, &user.Email, &user.Name, &user.Picture)
 	if err != nil {
 		log.Error(err)
-		return nil, errors.New("couldn't find user")
+		return nil, ErrUserNotFound
 	}
 
 	return &user, nil
@@ -73,7 +73,7 @@ func (u *UserSQL) GetByID() (*User, error) {
 
 	if err != nil {
 		log.Error(err)
-		return nil, errors.New("couldn't find user")
+		return nil, ErrUserNotFound
 	}
 
 	var user User
@@ -81,7 +81,7 @@ func (u *UserSQL) GetByID() (*User, error) {
 	err = row.Scan(&user.ID, &user.Email, &user.Name, &user.Picture)
 	if err != nil {
 		log.Error(err)
-		return nil, errors.New("couldn't find user")
+		return nil, ErrUserNotFound
 	}
 	return &user, nil
 }
@@ -94,3 +94,5 @@ func (u *UserSQL) Delete() error {
 	}
 	return nil
 }
+
+var ErrUserNotFound = errors.New("user not found")
