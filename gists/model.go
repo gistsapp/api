@@ -12,6 +12,8 @@ import (
 
 type GistVisibility string
 
+var GistNotFound error = errors.New("gist not found")
+
 const (
 	Private GistVisibility = "private"
 	Public  GistVisibility = "public"
@@ -92,7 +94,7 @@ func (g *GistSQL) UpdateContent(id string) (*Gist, error) {
 	err := pogo.SuperQuery(db, "UPDATE gists SET content = $1 WHERE gist_id = $2 AND owner = $3 RETURNING :fields", &gists, g.Content, id, g.OwnerID)
 
 	if len(gists) <= 0 {
-		return nil, errors.New("gist not found")
+		return nil, GistNotFound
 	}
 
 	return &gists[0], err
@@ -103,7 +105,7 @@ func (g *GistSQL) UpdateField(id string, field string, val string) (*Gist, error
 	gists := make([]Gist, 0)
 	err := pogo.SuperQuery(db, "UPDATE gists SET "+field+" = $1 WHERE gist_id = $2 AND owner = $3 RETURNING :fields", &gists, val, id, g.OwnerID)
 	if len(gists) <= 0 {
-		return nil, errors.New("gist not found")
+		return nil, GistNotFound
 	}
 	return &gists[0], err
 }
@@ -117,7 +119,7 @@ func (g *GistSQL) UpdateGist() (*Gist, error) {
 	gists := make([]Gist, 0)
 	err := pogo.SuperQuery(db, "UPDATE gists SET name = $1, content = $2, language = $3, description = $4, visibility = $5 WHERE gist_id = $6 AND owner = $7 RETURNING :fields", &gists, g.Name, g.Content, g.Language, g.Description, g.Visibility, g.ID, g.OwnerID)
 	if len(gists) <= 0 {
-		return nil, errors.New("gist not found")
+		return nil, GistNotFound
 	}
 	return &gists[0], err
 }
@@ -138,7 +140,7 @@ func (g *GistSQL) FindByID(id string) (*Gist, error) {
 	err := pogo.SuperQuery(db, "SELECT :fields FROM gists WHERE gist_id = $1", &gists, id)
 	if len(gists) <= 0 {
 		log.Error(err)
-		return nil, errors.New("gist not found")
+		return nil, GistNotFound
 	}
 	return &gists[0], err
 }
@@ -150,7 +152,7 @@ func (g *GistSQL) FindAll(limit int, offset int) ([]Gist, error) {
 	err := pogo.SuperQuery(db, "SELECT :fields FROM gists WHERE owner = $1 LIMIT $2 OFFSET $3", &gists, g.OwnerID, limit, offset)
 	if len(gists) <= 0 {
 		log.Error(err)
-		return nil, errors.New("gist not found")
+		return nil, GistNotFound
 	}
 	return gists, err
 }
@@ -160,7 +162,7 @@ func (g *GistSQL) Update() (*Gist, error) {
 	gists := make([]Gist, 0)
 	err := pogo.SuperQuery(db, "UPDATE gists SET name = $1, content = $2, language = $3, description = $4, visibility = $5 WHERE gist_id = $6 AND owner = $7 RETURNING :fields", &gists, g.Name, g.Content, g.Language, g.Description, g.Visibility, g.ID, g.OwnerID)
 	if len(gists) <= 0 {
-		return nil, errors.New("gist not found")
+		return nil, GistNotFound
 	}
 	return &gists[0], err
 }
@@ -176,7 +178,7 @@ func (g *GistSQL) Count() (int, error) {
 
 	if err != nil {
 		log.Error(err)
-		return 0, errors.New("couldn't get gists")
+		return 0, GistNotFound
 	}
 	return count, nil
 }

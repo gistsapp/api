@@ -133,6 +133,9 @@ func (g *GistControllerImpl) FindAll() fiber.Handler {
 
 		gists, err := GistService.FindAll(owner_id, limit, offset, short)
 		if err != nil {
+			if errors.Is(err, GistNotFound) {
+				return c.Status(404).SendString(err.Error())
+			}
 			return c.Status(500).SendString(err.Error())
 		}
 
@@ -162,6 +165,10 @@ func (g *GistControllerImpl) FindByID() fiber.Handler {
 		can_read, err := g.gist_guard.CanRead(c.Params("id"), owner_id)
 
 		if err != nil {
+
+			if errors.Is(err, GistNotFound) {
+				return c.Status(404).SendString(err.Error())
+			}
 			return c.Status(500).SendString(err.Error())
 		}
 
@@ -190,6 +197,10 @@ func (g *GistControllerImpl) RawFindByID() fiber.Handler {
 		can_read, err := g.gist_guard.CanRead(c.Params("id"), owner_id)
 
 		if err != nil {
+
+			if errors.Is(err, GistNotFound) {
+				return c.Status(404).SendString(err.Error())
+			}
 			return c.Status(500).SendString(err.Error())
 		}
 
@@ -218,6 +229,10 @@ func (g *GistControllerImpl) UpdateContent() fiber.Handler {
 		can_edit, err := g.gist_guard.CanEdit(c.Params("id"), owner_id)
 
 		if err != nil {
+
+			if errors.Is(err, GistNotFound) {
+				return c.Status(404).SendString(err.Error())
+			}
 			return c.Status(500).SendString(err.Error())
 		}
 
@@ -247,6 +262,9 @@ func (g *GistControllerImpl) UpdateLanguage() fiber.Handler {
 		can_edit, err := g.gist_guard.CanEdit(c.Params("id"), owner_id)
 
 		if err != nil {
+			if errors.Is(err, GistNotFound) {
+				return c.Status(404).SendString(err.Error())
+			}
 			return c.Status(500).SendString(err.Error())
 		}
 
@@ -276,6 +294,10 @@ func (g *GistControllerImpl) UpdateDescription() fiber.Handler {
 		can_edit, err := g.gist_guard.CanEdit(c.Params("id"), owner_id)
 
 		if err != nil {
+
+			if errors.Is(err, GistNotFound) {
+				return c.Status(404).SendString(err.Error())
+			}
 			return c.Status(500).SendString(err.Error())
 		}
 
@@ -301,6 +323,9 @@ func (g *GistControllerImpl) Delete() fiber.Handler {
 		can_edit, err := g.gist_guard.CanEdit(c.Params("id"), owner_id)
 
 		if err != nil {
+			if errors.Is(err, GistNotFound) {
+				return c.Status(404).SendString(err.Error())
+			}
 			return c.Status(500).SendString(err.Error())
 		}
 
@@ -330,6 +355,9 @@ func (g *GistControllerImpl) Update() fiber.Handler {
 		can_edit, err := g.gist_guard.CanEdit(id, owner_id)
 
 		if err != nil {
+			if errors.Is(err, GistNotFound) {
+				return c.Status(404).SendString(err.Error())
+			}
 			return c.Status(500).SendString(err.Error())
 		}
 

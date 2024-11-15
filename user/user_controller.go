@@ -1,6 +1,8 @@
 package user
 
 import (
+	"errors"
+
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -13,6 +15,9 @@ func (u *UserControllerImpl) Get() fiber.Handler {
 		user, err := UserService.GetUserByID(owner_id)
 
 		if err != nil {
+			if errors.Is(err, ErrUserNotFound) {
+				return c.Status(404).SendString(err.Error())
+			}
 			return c.Status(500).SendString(err.Error())
 		}
 
