@@ -1,6 +1,6 @@
 # Gists.app API - Code snippets and scripts safe
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/gistsapp/api)](https://goreportcard.com/report/github.com/kubernetes/kubernetes) ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/gistsapp/api?sort=semver)
+[![Go Report Card](https://goreportcard.com/badge/github.com/gistsapp/api)](https://goreportcard.com/report/github.com/gistsapp/api) ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/gistsapp/api?sort=semver)
 
 ## Usage
 
