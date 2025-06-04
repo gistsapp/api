@@ -1,0 +1,33 @@
+name: Trivy Scan
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  trivy-scan:
+    name: Trivy - Docker Image & Code Scan
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker (optional, ensures clean setup)
+        run: docker system prune -af
+
+      - name: Build Docker image locally
+        run: docker build -t gistsapp/api:${{ github.sha }} .
+
+      - name: Run Trivy image scan
+        id: trivy_image
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@0.31.0
+        with:
+          image-ref: 'gistsapp/api:${{ github.sha }}'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
