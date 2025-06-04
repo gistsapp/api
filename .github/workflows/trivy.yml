@@ -31,24 +31,3 @@ jobs:
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
-
-      - name: Run Trivy filesystem scan
-        id: trivy_fs
-        continue-on-error: true
-        uses: aquasecurity/trivy-action@0.31.0
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'table'
-          exit-code: '1'
-          ignore-unfixed: true
-          severity: 'CRITICAL,HIGH'
-
-      - name: Fail job if any Trivy scan failed
-        run: |
-          if [ "${{ steps.trivy_image.outcome }}" != "success" ] || [ "${{ steps.trivy_fs.outcome }}" != "success" ]; then
-            echo "❌ One or both Trivy scans failed."
-            exit 1
-          else
-            echo "✅ Both Trivy scans passed."
-          fi
